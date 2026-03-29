@@ -507,8 +507,8 @@ function ruleBasedScore(referenceAnswer, studentAnswer, maxScore = 5) {
   let ratio = matchedTerms.length / refTerms.length;
   
   if (refWords > 1000 && stuWords < 200) {
-      // Summary mode: if student covers 30% of technical terms from a 5000w script, that's excellent density.
-      ratio = Math.min(1.0, ratio * 3.3); 
+      // Summary mode: if student covers 25% of technical terms from a 5000w script, that's excellent density.
+      ratio = Math.min(1.0, ratio * 4.0); 
   }
 
   return {
@@ -533,7 +533,7 @@ function paperGradingScore(referenceAnswer, studentAnswer, maxScore = 5) {
     
     // Summary handling: if student is much shorter than ref, don't penalize harshly if density is high.
     if (refKw.length > 500 && stuKw.length < 150) {
-        return Math.min(1.0, (stuKw.length * 5) / refKw.length); // Adjusted for summary
+        return Math.min(1.0, (stuKw.length * 8) / refKw.length); // Adjusted for summary density
     }
     
     return stuKw.length === 0 ? 0 : Math.min(1.0, refKw.length / stuKw.length);
@@ -552,7 +552,7 @@ function paperGradingScore(referenceAnswer, studentAnswer, maxScore = 5) {
   const refWords = referenceAnswer.split(/\s+/).length;
   const stuWords = studentAnswer.split(/\s+/).length;
   if (refWords > 1000 && stuWords < 150 && Stf > 0.4) {
-      F = Math.min(1.0, F * 1.5);
+      F = Math.min(1.0, F * 1.8);
   }
 
   return F * maxScore;
