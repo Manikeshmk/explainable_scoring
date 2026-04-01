@@ -214,38 +214,133 @@ function renderShap(shap, max) {
     .join("");
 }
 
+function renderWaterfall(scoreObj, shap) {
+  const canvas = document.getElementById("waterfall-canvas");
+  const legend = document.getElementById("waterfall-legend");
+  if (!canvas || !scoreObj || !shap) return;
+
+  const { ctx, width, height } = prepareCanvas(canvas, 900, 340);
+  const labels = {
+    feat_avg_semantic: "General Meaning",
+    feat_max_semantic: "Peak Concept Match",
+    feat_anchors_covered: "Core Topics",
+    feat_avg_jaccard: "Vocabulary",
+    feat_avg_edit: "Phrasing",
+  };
+
+  const items = Object.entries(shap)
+    .map(([key, value]) => ({ key, label: labels[key] || key, value: Number(value) || 0 }))
+    .sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+
+  const total = items.reduce((sum, item) => sum + item.value, 0);
+  const margin = { top: 32, right: 28, bottom: 78, left: 28 };
+  const chartWidth = width - margin.left - margin.right;
+  const chartHeight = height - margin.top - margin.bottom;
+  const barGap = 14;
+  const barWidth = (chartWidth - barGap * (items.length - 1)) / items.length;
+  const maxAbs = Math.max(...items.map((item) => Math.abs(item.value)), Math.abs(total), 1);
+  const zeroY = margin.top + chartHeight * 0.72;
+  const scale = (chartHeight * 0.55) / maxAbs;
+  const baseline = Math.max(0, scoreObj.final - total);
+  let running = baseline;
+
+  const positiveColor = getCssColor("--accent1", "#5be49b");
+  const negativeColor = getCssColor("--danger", "#ff7070");
+  const axisColor = "rgba(255,255,255,0.14)";
+  const textColor = getCssColor("--text", "#f4f5fb");
+  const mutedColor = getCssColor("--text-muted", "#6d7385");
+
+  ctx.clearRect(0, 0, width, height);
+  ctx.font = "12px var(--font-sans)";
+  ctx.textAlign = "center";
+
+  // axis
+  ctx.strokeStyle = axisColor;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(margin.left, zeroY);
+  ctx.lineTo(width - margin.right, zeroY);
+  ctx.stroke();
+
+  ctx.fillStyle = mutedColor;
+  ctx.fillText("Contribution path", width / 2, 18);
+  ctx.fillText(`Final score: ${scoreObj.final.toFixed(2)}`, width - margin.right - 70, margin.top - 8);
+
+  items.forEach((item, index) => {
+    const x = margin.left + index * (barWidth + barGap);
+    const startY = zeroY - running * scale;
+    const endValue = running + item.value;
+    const endY = zeroY - endValue * scale;
+    const top = Math.min(startY, endY);
+    const heightPx = Math.max(4, Math.abs(endY - startY));
+    const color = item.value >= 0 ? positiveColor : negativeColor;
+
+    ctx.fillStyle = color;
+    ctx.fillRect(x, top, barWidth, heightPx);
+
+    // connector line
+    ctx.strokeStyle = axisColor;
+    ctx.beginPath();
+    ctx.moveTo(x + barWidth / 2, endY);
+    ctx.lineTo(x + barWidth + barGap / 2, endY);
+    ctx.stroke();
+
+    ctx.fillStyle = textColor;
+    ctx.font = "600 11px var(--font-sans)";
+    ctx.fillText(item.label, x + barWidth / 2, height - 42);
+
+    ctx.fillStyle = mutedColor;
+    ctx.font = "11px var(--font-sans)";
+    ctx.fillText(`${item.value >= 0 ? "+" : ""}${item.value.toFixed(2)}`, x + barWidth / 2, top - 8);
+
+    running = endValue;
+  });
+
+  // final marker
+  ctx.fillStyle = textColor;
+  ctx.font = "700 13px var(--font-sans)";
+  ctx.fillText(`Start ${baseline.toFixed(2)}`, margin.left + 30, zeroY + 26);
+  ctx.fillText(`End ${scoreObj.final.toFixed(2)}`, width - margin.right - 30, zeroY + 26);
+
+  if (legend) {
+    legend.innerHTML = `
+      <div class="waterfall-legend-item"><span class="waterfall-swatch waterfall-swatch-pos"></span>Positive contribution</div>
+      <div class="waterfall-legend-item"><span class="waterfall-swatch waterfall-swatch-neg"></span>Negative contribution</div>
+      <div class="waterfall-legend-item"><span class="waterfall-swatch waterfall-swatch-base"></span>Baseline-to-final path</div>
+    `;
+  }
+}
+
 function renderMetricComparison(features) {
   const container = document.getElementById("metric-comparison");
   if (!container || !features) return;
 
   const metrics = {
-    feat_avg_semantic: { label: "General Meaning", baseline: 0.55 },
-    feat_max_semantic: { label: "Peak Concept Match", baseline: 0.6 },
-    feat_anchors_covered: { label: "Core Topics", baseline: 0.5 },
-    feat_avg_jaccard: { label: "Vocabulary", baseline: 0.3 },
-    feat_avg_edit: { label: "Phrasing", baseline: 0.35 },
+    feat_avg_semantic: { label: "General Meaning" },
+    feat_max_semantic: { label: "Peak Concept Match" },
+    feat_anchors_covered: { label: "Core Topics" },
+    feat_avg_jaccard: { label: "Vocabulary" },
+    feat_avg_edit: { label: "Phrasing" },
   };
 
   const rows = Object.entries(metrics)
     .map(([key, cfg]) => {
       const studentVal = clamp01(features[key] ?? 0);
-      const baselineVal = clamp01(cfg.baseline ?? 0);
-      const baselinePct = Math.min(100, Math.max(4, baselineVal * 100));
       const studentPct = Math.min(100, Math.max(4, studentVal * 100));
       return `
         <div class="dual-bar-row">
-          <div class="dual-bar-label">${cfg.label}</div>
-          <div class="dual-bar-pair">
-            <div class="dual-bar-track" aria-label="Baseline ${cfg.label}">
-              <div class="dual-bar dual-bar--baseline" style="width:${baselinePct}%;">
-                <span>Baseline ${(baselineVal * 100).toFixed(0)}%</span>
-              </div>
+          <div class="dual-bar-header">
+            <div>
+              <div class="dual-bar-label">${cfg.label}</div>
+              <div class="dual-bar-caption">Student coverage for this metric</div>
             </div>
-            <div class="dual-bar-track" aria-label="Student ${cfg.label}">
-              <div class="dual-bar dual-bar--student" style="width:${studentPct}%;">
-                <span>Student ${(studentVal * 100).toFixed(0)}%</span>
-              </div>
-            </div>
+            <span class="dual-bar-chip dual-bar-chip--student">${(studentVal * 100).toFixed(0)}%</span>
+          </div>
+          <div class="dual-bar-track" aria-label="Student ${cfg.label}">
+            <div class="dual-bar dual-bar--student" style="width:${studentPct}%;"></div>
+          </div>
+          <div class="dual-bar-footer">
+            <span>${(studentVal * 100).toFixed(1)}% coverage</span>
           </div>
         </div>
       `;
@@ -349,10 +444,11 @@ function renderDriftMatrix(matrixData) {
   if (!container) return;
 
   const showEmpty = () => {
-    container.innerHTML =
-      '<div class="drift-matrix-empty">Not enough overlapping context to visualize drift yet.</div>';
-    container.style.gridTemplateColumns = `repeat(10, minmax(3px, 1fr))`;
-    container.style.gridTemplateRows = `repeat(1, minmax(6px, 1fr))`;
+    container.innerHTML = `
+      <div class="drift-matrix-shell">
+        <div class="drift-matrix-empty">Not enough overlapping context to visualize drift yet.</div>
+      </div>
+    `;
   };
 
   if (
@@ -364,22 +460,101 @@ function renderDriftMatrix(matrixData) {
     return;
   }
 
-  const { grid, cols, rows } = matrixData;
-  container.innerHTML = "";
-  container.style.gridTemplateColumns = `repeat(${cols}, minmax(3px, 1fr))`;
-  container.style.gridTemplateRows = `repeat(${rows}, minmax(6px, 1fr))`;
+  const {
+    grid,
+    cols,
+    rows,
+    refLabels = [],
+    stuLabels = [],
+    averageSimilarity = 0,
+    maxSimilarity = 0,
+    minSimilarity = 0,
+  } = matrixData;
 
-  for (let j = 0; j < grid.length; j++) {
-    for (let i = 0; i < grid[j].length; i++) {
-      const cell = document.createElement("div");
-      cell.className = "matrix-cell";
-      const sim = Number.isFinite(grid[j][i]) ? grid[j][i] : 0;
-      const safe = Math.max(0, Math.min(1, sim));
-      cell.style.setProperty("--sim", safe);
-      cell.title = `T-Chunk ${i + 1}, S-Chunk ${j + 1}: Sim ${safe.toFixed(2)}`;
-      container.appendChild(cell);
-    }
-  }
+  const flat = grid.flat();
+  const strongCount = flat.filter((value) => value >= 0.6).length;
+  const weakCount = flat.filter((value) => value < 0.25).length;
+  const averageDrift = 1 - clamp01(averageSimilarity);
+
+  const columnLabels = refLabels
+    .map(
+      (label, idx) => `
+      <div class="drift-col-label" title="Teacher chunk ${idx + 1}">
+        ${label}
+      </div>
+    `,
+    )
+    .join("");
+
+  const rowsHtml = grid
+    .map((row, rowIndex) => {
+      const rowLabel = stuLabels[rowIndex] || `S${rowIndex + 1}`;
+      return `
+        <div class="drift-row">
+          <div class="drift-row-label" title="Student chunk ${rowIndex + 1}">${rowLabel}</div>
+          <div class="drift-row-cells" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr));">
+            ${row
+              .map((value, colIndex) => {
+                const safe = Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0;
+                const drift = 1 - safe;
+                const hue = Math.round(212 - safe * 140);
+                return `
+                  <div
+                    class="matrix-cell"
+                    style="--sim:${safe}; --cell-hue:${hue};"
+                    title="${rowLabel} × ${refLabels[colIndex] || `T${colIndex + 1}`}: similarity ${safe.toFixed(2)}, drift ${drift.toFixed(2)}"
+                  ></div>
+                `;
+              })
+              .join("")}
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  container.innerHTML = `
+    <div class="drift-matrix-shell">
+      <div class="drift-matrix-summary">
+        <div class="drift-stat">
+          <span class="drift-stat-label">Avg similarity</span>
+          <strong>${Math.round(averageSimilarity * 100)}%</strong>
+        </div>
+        <div class="drift-stat">
+          <span class="drift-stat-label">Avg drift</span>
+          <strong>${Math.round(averageDrift * 100)}%</strong>
+        </div>
+        <div class="drift-stat">
+          <span class="drift-stat-label">Peak match</span>
+          <strong>${Math.round(maxSimilarity * 100)}%</strong>
+        </div>
+        <div class="drift-stat">
+          <span class="drift-stat-label">Low-sim cells</span>
+          <strong>${weakCount}</strong>
+        </div>
+        <div class="drift-stat">
+          <span class="drift-stat-label">Strong cells</span>
+          <strong>${strongCount}</strong>
+        </div>
+      </div>
+      <div class="drift-axis">
+        <span>Teacher script segments</span>
+        <span>${cols} chunks</span>
+      </div>
+      <div class="drift-column-labels" style="grid-template-columns: repeat(${cols}, minmax(72px, 1fr));">
+        ${columnLabels}
+      </div>
+      <div class="drift-heatmap-wrap">
+        ${rowsHtml}
+      </div>
+      <div class="drift-legend">
+        <span><i class="legend-swatch legend-low"></i> Low similarity</span>
+        <span><i class="legend-swatch legend-mid"></i> Moderate similarity</span>
+        <span><i class="legend-swatch legend-high"></i> Strong similarity</span>
+      </div>
+      <div class="drift-caption">Each cell is a real similarity score between a student chunk and a teacher chunk.</div>
+    </div>
+  `;
 }
 
 function renderDriftTimeline(timelineData) {
@@ -584,8 +759,9 @@ function renderConceptClusters(clusters) {
 
 // Single Ans Form
 const demoForm = document.getElementById("demo-form");
+const computeScoreBtn = document.getElementById("compute-score-btn");
 if (demoForm) {
-  demoForm.addEventListener("submit", (e) => {
+  demoForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const ref = document.getElementById("ref-answer").value.trim();
     const stu = document.getElementById("stu-answer").value.trim();
@@ -600,6 +776,9 @@ if (demoForm) {
       return;
     }
 
+    setButtonRunningState(computeScoreBtn, true, "Computing...");
+    await yieldToBrowser();
+
     try {
       const res = gradeAnswer(ref, stu, max);
 
@@ -612,6 +791,7 @@ if (demoForm) {
       renderScore(res.scoreObj, max);
       renderExplanation(res.explanation);
       renderShap(res.shap, max);
+      renderWaterfall(res.scoreObj, res.shap);
       renderMetricComparison(res.features);
       renderMetricRadar(res.features);
       renderDriftMatrix(res.matrix);
@@ -633,6 +813,8 @@ if (demoForm) {
         "error",
       );
       console.error(err);
+    } finally {
+      setButtonRunningState(computeScoreBtn, false);
     }
   });
 }
@@ -779,7 +961,9 @@ function handleCsvUpload(file) {
 
           if (ref && stu) {
             const res = gradeAnswer(ref, stu, 10);
-            const driftPct = deriveSemanticDriftPercent(res.scoreObj.final, 10);
+            const driftPct = Math.round(
+              clamp01(res?.drift?.drift_score ?? 1) * 100,
+            );
             const alignmentPct = Math.max(0, 100 - driftPct);
 
             scored.push({
@@ -914,14 +1098,35 @@ function wireLiveReplayButtons() {
   const buttons = document.querySelectorAll(".row-replay-btn");
   buttons.forEach((btn) => {
     btn.addEventListener("click", () => {
+      if (btn.dataset.processing === "1") return;
       const idx = Number(btn.dataset.rowIndex || 0);
-      triggerLiveReplay(idx);
+      triggerLiveReplay(idx, btn);
     });
   });
 }
 
-function triggerLiveReplay(rowIndex) {
+function setReplayButtonState(button, isProcessing) {
+  if (!button) return;
+  if (isProcessing) {
+    button.dataset.processing = "1";
+    setButtonRunningState(button, true, "Running...");
+    button.setAttribute("aria-busy", "true");
+    return;
+  }
+
+  button.dataset.processing = "0";
+  setButtonRunningState(button, false);
+  button.removeAttribute("aria-busy");
+}
+
+function triggerLiveReplay(rowIndex, triggerBtn) {
+  document
+    .querySelectorAll('.row-replay-btn[data-processing="1"]')
+    .forEach((btn) => setReplayButtonState(btn, false));
+  setReplayButtonState(triggerBtn, true);
+
   if (!liveReplayConfig) {
+    setReplayButtonState(triggerBtn, false);
     showPopup("Live Replay", "No replay data is available yet.", "warning");
     return;
   }
@@ -938,6 +1143,7 @@ function triggerLiveReplay(rowIndex) {
       : payload?.name || `Student ${rowIndex + 1}`;
 
   if (!ref || !studentText) {
+    setReplayButtonState(triggerBtn, false);
     showPopup(
       "Live Replay",
       "Reference or student answer missing for this row.",
@@ -950,6 +1156,7 @@ function triggerLiveReplay(rowIndex) {
   const stuField = document.getElementById("stu-answer");
   const maxField = document.getElementById("max-score");
   if (!refField || !stuField || !maxField || !demoForm) {
+    setReplayButtonState(triggerBtn, false);
     showPopup(
       "Live Replay",
       "Unable to locate the live scoring form on this page.",
@@ -968,7 +1175,10 @@ function triggerLiveReplay(rowIndex) {
   }
 
   showToast(`🔁 Replaying ${studentName} in live demo...`);
-  demoForm.dispatchEvent(new Event("submit"));
+  requestAnimationFrame(() => {
+    demoForm.dispatchEvent(new Event("submit"));
+    setTimeout(() => setReplayButtonState(triggerBtn, false), 900);
+  });
 }
 
 // Script Eval (Docx + Xlsx)
@@ -1072,6 +1282,23 @@ function yieldToBrowser() {
       setTimeout(resolve, 0);
     }
   });
+}
+
+function setButtonRunningState(button, isRunning, runningText) {
+  if (!button) return;
+  if (isRunning) {
+    if (!button.dataset.defaultText) {
+      button.dataset.defaultText = button.textContent.trim();
+    }
+    button.disabled = true;
+    button.classList.add("loading");
+    if (runningText) button.textContent = runningText;
+    return;
+  }
+
+  button.disabled = false;
+  button.classList.remove("loading");
+  button.textContent = button.dataset.defaultText || button.textContent;
 }
 
 function setScriptEvalRunning(isRunning) {
@@ -1289,7 +1516,9 @@ if (scriptBtn) {
             typeof res?.scoreObj?.final === "number"
               ? res.scoreObj.final
               : 0;
-          const driftPct = deriveSemanticDriftPercent(finalScore, 10);
+          const driftPct = Math.round(
+            clamp01(res?.drift?.drift_score ?? 1) * 100,
+          );
           const alignmentPct = Math.max(0, 100 - driftPct);
 
           results.push({

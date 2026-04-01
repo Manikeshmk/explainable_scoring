@@ -168,6 +168,7 @@
                   />
                 </div>
                 <button
+                  id="compute-score-btn"
                   type="submit"
                   class="btn btn-primary"
                   style="flex: 2; height: 50px; margin-bottom: 1.5rem"
@@ -236,18 +237,38 @@
                 </div>
               </div>
 
+              <div class="viz-card glass-card xai-card span-2">
+                <div class="viz-header">
+                  <h3 class="viz-title">🧭 Score Waterfall</h3>
+                  <span class="badge" style="margin-bottom: 0"
+                    >Contribution path</span
+                  >
+                </div>
+                <div class="viz-body">
+                  <canvas
+                    id="waterfall-canvas"
+                    class="waterfall-canvas"
+                    width="900"
+                    height="340"
+                  ></canvas>
+                  <div id="waterfall-legend" class="waterfall-legend"></div>
+                  <p class="viz-footnote">
+                    This chart stacks each feature contribution to show how the final score is built.
+                  </p>
+                </div>
+              </div>
+
               <div class="viz-card glass-card xai-card">
                 <div class="viz-header">
-                  <h3 class="viz-title">📋 Baseline vs Student Metrics</h3>
+                  <h3 class="viz-title">📋 Student Metric Coverage</h3>
                   <span class="badge" style="margin-bottom: 0"
-                    >Dual Bars</span
+                    >Data-driven</span
                   >
                 </div>
                 <div class="viz-body">
                   <div id="metric-comparison" class="dual-bar-grid"></div>
                   <p class="viz-footnote">
-                    Blue bars show expected mastery thresholds, purple bars show the
-                    current response.
+                    Each bar shows how strongly the student response covers that metric.
                   </p>
                 </div>
               </div>

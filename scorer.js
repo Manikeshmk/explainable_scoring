@@ -280,6 +280,38 @@ function tokenizeFiltered(text) {
   return tokenize(text).filter((t) => !STOPWORDS.has(t));
 }
 
+function normalizeConceptToken(token) {
+  if (!token) return "";
+  let t = token.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (t.length > 5 && t.endsWith("ies")) {
+    t = `${t.slice(0, -3)}y`;
+  } else if (t.length > 5 && t.endsWith("ing")) {
+    t = t.slice(0, -3);
+  } else if (t.length > 4 && t.endsWith("ed")) {
+    t = t.slice(0, -2);
+  } else if (t.length > 4 && t.endsWith("es")) {
+    t = t.slice(0, -2);
+  } else if (t.length > 3 && t.endsWith("s")) {
+    t = t.slice(0, -1);
+  }
+  return t;
+}
+
+function hasConceptMatch(term, normalizedStudentSet, normalizedStudentList) {
+  const normTerm = normalizeConceptToken(term);
+  if (!normTerm) return false;
+  if (normalizedStudentSet.has(normTerm)) return true;
+
+  // Loose lexical matching to handle mild inflections/paraphrases.
+  return normalizedStudentList.some((stuTok) => {
+    if (!stuTok || stuTok.length < 3) return false;
+    if (stuTok.startsWith(normTerm) || normTerm.startsWith(stuTok)) {
+      return Math.min(stuTok.length, normTerm.length) >= 4;
+    }
+    return editSimilarity(stuTok, normTerm) >= 0.82;
+  });
+}
+
 // ─────────────────────────────────────────────────────────────
 // 2. SIMILARITY METRICS
 // ─────────────────────────────────────────────────────────────
@@ -370,8 +402,16 @@ function computeSemanticDrift(referenceAnswer, studentAnswer, refTerms = null) {
   }
 
   // Extract tokens for analysis
-  const refTokens = new Set(tokenize(referenceAnswer));
-  const stuTokens = new Set(tokenize(studentAnswer));
+  const refTokenList = tokenize(referenceAnswer);
+  const stuTokenList = tokenize(studentAnswer);
+  const refTokens = new Set(refTokenList);
+  const stuTokens = new Set(stuTokenList);
+
+  const normalizedRefTokens = [...new Set(refTokenList.map(normalizeConceptToken))]
+    .filter(Boolean);
+  const normalizedStuTokens = [...new Set(stuTokenList.map(normalizeConceptToken))]
+    .filter(Boolean);
+  const normalizedStuTokenSet = new Set(normalizedStuTokens);
 
   let conceptTerms = [];
   if (Array.isArray(refTerms) && refTerms.length > 0) {
@@ -408,13 +448,20 @@ function computeSemanticDrift(referenceAnswer, studentAnswer, refTerms = null) {
     };
   }
 
-  // Missing concepts: reference terms not in student answer
-  const missing = normalizedRefTerms.filter((t) => !stuTokens.has(t));
+  // Missing concepts: concepts not matched even after normalization + fuzzy token match.
+  const missing = normalizedRefTerms.filter(
+    (term) => !hasConceptMatch(term, normalizedStuTokenSet, normalizedStuTokens),
+  );
   const missingCount = missing.length;
 
   // Over-explained: student used technical terms not in reference
   const stuTerms = extractTechnicalTerms(studentAnswer);
-  const over = stuTerms.filter((t) => !normalizedRefTerms.includes(t));
+  const normalizedRefTermSet = new Set(
+    normalizedRefTerms.map((t) => normalizeConceptToken(t)).filter(Boolean),
+  );
+  const over = stuTerms.filter(
+    (term) => !normalizedRefTermSet.has(normalizeConceptToken(term)),
+  );
   const overCount = over.length;
 
   // Concept coverage: what percentage of reference concepts did student cover?
@@ -425,20 +472,32 @@ function computeSemanticDrift(referenceAnswer, studentAnswer, refTerms = null) {
       : 0.0;
 
   // Topic consistency: vocabulary overlap with reference
-  const intersection = [...refTokens].filter((t) => stuTokens.has(t)).length;
+  const topicIntersection = normalizedRefTokens.filter((t) =>
+    normalizedStuTokenSet.has(t),
+  ).length;
   const topicConsistency =
-    refTokens.size > 0 ? intersection / refTokens.size : 0.0;
+    normalizedRefTokens.length > 0
+      ? topicIntersection / normalizedRefTokens.length
+      : 0.0;
+
+  const semanticConsistency = tfCosineSim(referenceAnswer, studentAnswer);
 
   // Drift formula:
   // Missing critical concepts = high drift
   // Over-explained but off-topic = moderate drift
   // Going completely off-topic = high drift
   const missingPenalty = missingCount / normalizedRefTerms.length;
-  const overPenalty = (overCount / (normalizedRefTerms.length + 1)) * 0.3; // Lower weight
+  const overPenalty = overCount / (normalizedRefTerms.length + 1);
 
   const driftScore = Math.min(
     1.0,
-    missingPenalty + overPenalty * (1.0 - topicConsistency),
+    Math.max(
+      0.0,
+      0.55 * missingPenalty +
+        0.25 * (1.0 - topicConsistency) +
+        0.15 * (1.0 - semanticConsistency) +
+        0.05 * overPenalty,
+    ),
   );
 
   return {
@@ -679,7 +738,7 @@ function generateExplanation(
     const driftPct = Math.round((1 - drift.drift_score) * 100);
     const coverage = Math.round(drift.concept_coverage * 100);
 
-    if (drift.drift_score > 0.5) {
+    if (drift.drift_score > 0.65) {
       sections.push({
         icon: "📍",
         text: `<strong>Semantic Drift Alert:</strong> Your answer drifts ${Math.round(drift.drift_score * 100)}% from the reference.`,
@@ -971,29 +1030,45 @@ function computeDriftMatrix(reference, student) {
   );
 
   const refChunks = [];
+  const refLabels = [];
   const refStep = refWords.length / colCount;
   for (let i = 0; i < colCount; i++) {
     const start = Math.floor(i * refStep);
     const end = Math.max(start + 1, Math.floor((i + 1) * refStep));
     refChunks.push(refWords.slice(start, end).join(" "));
+    refLabels.push(`${Math.round((start / Math.max(1, refWords.length)) * 100)}-${Math.round((end / Math.max(1, refWords.length)) * 100)}%`);
   }
 
   const stuChunks = [];
+  const stuLabels = [];
   const stuStep = stuWords.length / rowCount;
   for (let j = 0; j < rowCount; j++) {
     const start = Math.floor(j * stuStep);
     const end = Math.max(start + 1, Math.floor((j + 1) * stuStep));
     stuChunks.push(stuWords.slice(start, end).join(" "));
+    stuLabels.push(`S${j + 1}: ${Math.round((start / Math.max(1, stuWords.length)) * 100)}-${Math.round((end / Math.max(1, stuWords.length)) * 100)}%`);
   }
 
   const matrix = stuChunks.map((stuChunk) =>
     refChunks.map((refChunk) => tfCosineSim(refChunk, stuChunk)),
   );
 
+  const flat = matrix.flat();
+  const averageSimilarity = flat.length
+    ? flat.reduce((a, b) => a + b, 0) / flat.length
+    : 0;
+  const maxSimilarity = flat.length ? Math.max(...flat) : 0;
+  const minSimilarity = flat.length ? Math.min(...flat) : 0;
+
   return {
     grid: matrix,
     cols: colCount,
     rows: rowCount,
+    refLabels,
+    stuLabels,
+    averageSimilarity: Math.round(averageSimilarity * 1000) / 1000,
+    maxSimilarity: Math.round(maxSimilarity * 1000) / 1000,
+    minSimilarity: Math.round(minSimilarity * 1000) / 1000,
   };
 }
 
