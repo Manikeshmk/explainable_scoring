@@ -158,7 +158,7 @@ function renderShap(shap, max) {
   body.innerHTML = Object.entries(shap)
     .map(([key, val]) => {
       const isPos = val >= 0;
-      const width = Math.min(100, (Math.abs(val) / (max * 0.5)) * 100);
+      const width = Math.min(100, (Math.abs(val) / Math.max(1, max)) * 100);
       return `
             <div style="margin-bottom: 1rem;">
                 <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.3rem;">
@@ -177,22 +177,39 @@ function renderShap(shap, max) {
 /**
  * NEW: Advanced Semantic Drift Timeline (100x10 Matrix)
  */
-function renderDriftMatrix(matrix) {
+function renderDriftMatrix(matrixData) {
   const container = document.getElementById("drift-matrix");
-  if (!container || !matrix) return;
+  if (!container) return;
 
+  const showEmpty = () => {
+    container.innerHTML =
+      '<div class="drift-matrix-empty">Not enough overlapping context to visualize drift yet.</div>';
+    container.style.gridTemplateColumns = `repeat(10, minmax(3px, 1fr))`;
+    container.style.gridTemplateRows = `repeat(1, minmax(6px, 1fr))`;
+  };
+
+  if (
+    !matrixData ||
+    !Array.isArray(matrixData.grid) ||
+    matrixData.grid.length === 0
+  ) {
+    showEmpty();
+    return;
+  }
+
+  const { grid, cols, rows } = matrixData;
   container.innerHTML = "";
-  // X is Teacher (100 parts), Y is Student (10 parts)
-  // The matrix from scorer is stuChunks[j][refChunks[i]] -> 10 rows (Y) of 100 cols (X)
+  container.style.gridTemplateColumns = `repeat(${cols}, minmax(3px, 1fr))`;
+  container.style.gridTemplateRows = `repeat(${rows}, minmax(6px, 1fr))`;
 
-  for (let j = 0; j < matrix.length; j++) {
-    for (let i = 0; i < matrix[j].length; i++) {
+  for (let j = 0; j < grid.length; j++) {
+    for (let i = 0; i < grid[j].length; i++) {
       const cell = document.createElement("div");
       cell.className = "matrix-cell";
-      const sim = matrix[j][i];
-      cell.style.setProperty("--sim", sim);
-      // Tooltip or title for inspection
-      cell.title = `T-Chunk ${i + 1}, S-Chunk ${j + 1}: Sim ${sim.toFixed(2)}`;
+      const sim = Number.isFinite(grid[j][i]) ? grid[j][i] : 0;
+      const safe = Math.max(0, Math.min(1, sim));
+      cell.style.setProperty("--sim", safe);
+      cell.title = `T-Chunk ${i + 1}, S-Chunk ${j + 1}: Sim ${safe.toFixed(2)}`;
       container.appendChild(cell);
     }
   }
@@ -577,15 +594,23 @@ const docxZone = document.getElementById("script-upload-zone");
 const xlsxZone = document.getElementById("summary-upload-zone");
 const docxFileLabel = document.getElementById("script-upload-filename");
 const xlsxFileLabel = document.getElementById("summary-upload-filename");
+const scriptStatusEl = document.getElementById("script-eval-status");
 const uploadPlaceholderText = "No file selected yet";
 const scriptBtnDefaultText = scriptBtn
   ? scriptBtn.textContent.trim()
   : "Run Class Evaluation";
+const scriptEvalYieldBatch = 1; // yield every record to keep UI responsive with large datasets
 
 let teacherTranscript = "";
 let studentData = [];
 let docxFileName = "";
 let xlsxFileName = "";
+let evalColumnHints = {
+  summary: null,
+  name: null,
+  email: null,
+  roll: null,
+};
 
 function hasMeaningfulValue(value) {
   return value !== undefined && value !== null && `${value}`.trim() !== "";
@@ -615,6 +640,55 @@ function safeValue(row, key, fallback = "") {
   return fallback;
 }
 
+function resetEvalColumnHints() {
+  evalColumnHints = {
+    summary: null,
+    name: null,
+    email: null,
+    roll: null,
+  };
+}
+
+function inferEvalColumns(rows) {
+  resetEvalColumnHints();
+  if (!Array.isArray(rows) || rows.length === 0) return;
+
+  const richestRow = rows.reduce((best, row) => {
+    const current = row || {};
+    if (!best) return current;
+    return Object.keys(current).length > Object.keys(best).length ? current : best;
+  }, rows[0] || {});
+
+  const keys = Object.keys(richestRow || {});
+  const findKey = (regex) => keys.find((k) => regex.test(k)) || null;
+
+  evalColumnHints = {
+    summary: findKey(/summary|answer|response|essay/i),
+    name: findKey(/name|student|fullname/i),
+    email: findKey(/email|emailaddress|e-mail/i),
+    roll: findKey(/roll|rollnumber|studentid|id/i),
+  };
+
+  if (!evalColumnHints.summary) {
+    showPopup(
+      "Column Not Found",
+      "Couldn't detect a summary/answer column. Please ensure one header contains keywords like 'summary', 'answer', 'response', or 'essay'.",
+      "error",
+    );
+  }
+}
+
+function yieldToBrowser() {
+  return new Promise((resolve) => {
+    const raf = typeof window !== "undefined" ? window.requestAnimationFrame : null;
+    if (typeof raf === "function") {
+      raf(() => resolve());
+    } else {
+      setTimeout(resolve, 0);
+    }
+  });
+}
+
 function setScriptEvalRunning(isRunning) {
   if (!scriptBtn) return;
   if (isRunning) {
@@ -624,10 +698,19 @@ function setScriptEvalRunning(isRunning) {
     scriptBtn.disabled = true;
     scriptBtn.classList.remove("pulse");
     scriptBtn.classList.add("loading");
+    if (scriptStatusEl) {
+      scriptStatusEl.textContent = "Class evaluation in progress...";
+      scriptStatusEl.classList.add("active");
+      scriptStatusEl.classList.remove("hidden");
+    }
   } else {
     const baseText = scriptBtn.dataset.defaultText || scriptBtnDefaultText;
     scriptBtn.textContent = baseText;
     scriptBtn.classList.remove("loading");
+    if (scriptStatusEl) {
+      scriptStatusEl.classList.remove("active");
+      scriptStatusEl.classList.add("hidden");
+    }
     checkEvalReady();
   }
 }
@@ -677,6 +760,7 @@ if (xlsxInput && xlsxZone) {
       studentData = [];
       xlsxFileName = "";
       updateUploadState(xlsxZone, xlsxFileLabel, "");
+      resetEvalColumnHints();
       checkEvalReady();
       return;
     }
@@ -691,6 +775,7 @@ if (xlsxInput && xlsxZone) {
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
         studentData = XLSX.utils.sheet_to_json(ws);
+        inferEvalColumns(studentData);
         showPopup(
           "Student Data Loaded",
           `✅ Loaded ${studentData.length} students from ${xlsxFileName}`,
@@ -703,6 +788,7 @@ if (xlsxInput && xlsxZone) {
       studentData = [];
       xlsxFileName = "";
       updateUploadState(xlsxZone, xlsxFileLabel, "");
+      resetEvalColumnHints();
       showPopup(
         "Library Missing",
         "XLSX library not loaded for Excel processing.",
@@ -714,17 +800,21 @@ if (xlsxInput && xlsxZone) {
 
 function checkEvalReady() {
   if (!scriptBtn) return;
-  if (teacherTranscript && studentData.length > 0) {
+  if (teacherTranscript && studentData.length > 0 && evalColumnHints.summary) {
     scriptBtn.disabled = false;
     scriptBtn.classList.add("pulse");
   } else {
     scriptBtn.disabled = true;
     scriptBtn.classList.remove("pulse");
+    if (scriptStatusEl) {
+      scriptStatusEl.classList.add("hidden");
+      scriptStatusEl.classList.remove("active");
+    }
   }
 }
 
 if (scriptBtn) {
-  scriptBtn.addEventListener("click", () => {
+  scriptBtn.addEventListener("click", async () => {
     if (!teacherTranscript || studentData.length === 0) {
       showPopup(
         "Missing Data",
@@ -733,7 +823,16 @@ if (scriptBtn) {
       );
       return;
     }
+    if (!evalColumnHints.summary) {
+      showPopup(
+        "Missing Column",
+        "Unable to detect a summary/answer column in your sheet. Please rename it to include keywords like 'summary', 'answer', or 'response'.",
+        "error",
+      );
+      return;
+    }
     setScriptEvalRunning(true);
+    await yieldToBrowser();
 
     try {
       // Create progress overlay
@@ -751,24 +850,25 @@ if (scriptBtn) {
       document.body.insertAdjacentHTML("beforeend", progressHtml);
 
       const results = [];
-      studentData.forEach((s, idx) => {
+      for (let idx = 0; idx < studentData.length; idx += 1) {
+        if (idx % scriptEvalYieldBatch === 0) {
+          await yieldToBrowser();
+        }
+        const s = studentData[idx];
         try {
-          const rowKeys = Object.keys(s);
-          const summaryCol =
-            rowKeys.find((k) =>
-              /summary|answer|response|essay/i.test(k),
-            ) || rowKeys[rowKeys.length - 1];
-
-          const nameCol =
-            rowKeys.find((k) => /name|student|fullname/i.test(k)) || "name";
-          const emailCol =
-            rowKeys.find((k) => /email|emailaddress|e-mail/i.test(k)) ||
-            "email";
-          const rollCol =
-            rowKeys.find((k) => /roll|rollnumber|studentid|id/i.test(k)) ||
-            "roll";
-
-          const studentSummary = safeValue(s, summaryCol, "");
+          const studentSummary = safeValue(s, evalColumnHints.summary, "");
+          if (!hasMeaningfulValue(studentSummary)) {
+            results.push({
+              Name: safeValue(s, evalColumnHints.name || "name", "Unknown"),
+              Email: safeValue(s, evalColumnHints.email || "email", "N/A"),
+              Roll: safeValue(s, evalColumnHints.roll || "roll", "N/A"),
+              Score: "MISSING SUMMARY",
+              Drift: "-",
+              "Topic Alignment": "-",
+              "Concept Coverage": "-",
+            });
+            continue;
+          }
           const res = gradeAnswer(teacherTranscript, studentSummary, 10);
 
           const driftScoreRaw =
@@ -776,6 +876,7 @@ if (scriptBtn) {
               ? res.drift.drift_score
               : 0;
           const driftScore = Math.min(Math.max(driftScoreRaw, 0), 1);
+          const driftPct = Math.round(driftScore * 100);
           const coverageRaw =
             typeof res?.drift?.concept_coverage === "number"
               ? res.drift.concept_coverage
@@ -790,11 +891,11 @@ if (scriptBtn) {
               : 0;
 
           results.push({
-            Name: safeValue(s, nameCol, "Unknown"),
-            Email: safeValue(s, emailCol, "N/A"),
-            Roll: safeValue(s, rollCol, "N/A"),
+            Name: safeValue(s, evalColumnHints.name || "name", "Unknown"),
+            Email: safeValue(s, evalColumnHints.email || "email", "N/A"),
+            Roll: safeValue(s, evalColumnHints.roll || "roll", "N/A"),
             Score: finalScore.toFixed(2),
-            "Actual Drift": driftScore.toFixed(2),
+            Drift: `${driftPct}%`,
             "Topic Alignment": `${alignmentPct}%`,
             "Concept Coverage": `${coveragePct}%`,
           });
@@ -805,7 +906,7 @@ if (scriptBtn) {
             Email: safeValue(s, "email", "N/A"),
             Roll: safeValue(s, "roll", "N/A"),
             Score: "ERROR",
-            "Actual Drift": "N/A",
+            Drift: "N/A",
             "Topic Alignment": "N/A",
             "Concept Coverage": "N/A",
           });
@@ -818,7 +919,7 @@ if (scriptBtn) {
         if (progressBar) progressBar.style.width = progress + "%";
         if (progressText)
           progressText.textContent = `${idx + 1} / ${studentData.length} evaluated`;
-      });
+      }
 
       if (results.length === 0) {
         showPopup(

@@ -373,24 +373,56 @@ function computeSemanticDrift(referenceAnswer, studentAnswer, refTerms = null) {
   const refTokens = new Set(tokenize(referenceAnswer));
   const stuTokens = new Set(tokenize(studentAnswer));
 
-  // Get reference terms if not provided
-  if (!refTerms) {
-    refTerms = extractTechnicalTerms(referenceAnswer);
+  let conceptTerms = [];
+  if (Array.isArray(refTerms) && refTerms.length > 0) {
+    refTerms.forEach((term) => {
+      if (typeof term === "string" && term.trim().length > 0) {
+        conceptTerms.push(...extractTechnicalTerms(term));
+      }
+    });
+  }
+
+  if (conceptTerms.length === 0) {
+    conceptTerms = extractTechnicalTerms(referenceAnswer);
+  }
+
+  const normalizedRefTerms = [];
+  const seenConcepts = new Set();
+  conceptTerms.forEach((term) => {
+    const key = term.toLowerCase();
+    if (!seenConcepts.has(key)) {
+      seenConcepts.add(key);
+      normalizedRefTerms.push(term);
+    }
+  });
+
+  if (normalizedRefTerms.length === 0) {
+    return {
+      drift_score: 1.0,
+      concept_coverage: 0.0,
+      topic_consistency: 0.0,
+      missing_concepts_count: 0,
+      over_explained_count: 0,
+      missing_concepts: [],
+      over_explained_concepts: [],
+    };
   }
 
   // Missing concepts: reference terms not in student answer
-  const missing = refTerms.filter((t) => !stuTokens.has(t));
+  const missing = normalizedRefTerms.filter((t) => !stuTokens.has(t));
   const missingCount = missing.length;
 
   // Over-explained: student used technical terms not in reference
   const stuTerms = extractTechnicalTerms(studentAnswer);
-  const over = stuTerms.filter((t) => !refTerms.includes(t));
+  const over = stuTerms.filter((t) => !normalizedRefTerms.includes(t));
   const overCount = over.length;
 
   // Concept coverage: what percentage of reference concepts did student cover?
-  const coveredCount = refTerms.length - missingCount;
+  const coveredCount = normalizedRefTerms.length - missingCount;
   const conceptCoverage =
-    refTerms.length > 0 ? coveredCount / refTerms.length : 0.0;
+    normalizedRefTerms.length > 0
+      ? coveredCount / normalizedRefTerms.length
+      : 0.0;
 
   // Topic consistency: vocabulary overlap with reference
   const intersection = [...refTokens].filter((t) => stuTokens.has(t)).length;
@@ -401,10 +433,8 @@ function computeSemanticDrift(referenceAnswer, studentAnswer, refTerms = null) {
   // Missing critical concepts = high drift
   // Over-explained but off-topic = moderate drift
   // Going completely off-topic = high drift
-  const missingPenalty =
-    refTerms.length > 0 ? missingCount / refTerms.length : 0.0;
-  const overPenalty =
-    (refTerms.length > 0 ? overCount / (refTerms.length + 1) : 0.0) * 0.3; // Lower weight
+  const missingPenalty = missingCount / normalizedRefTerms.length;
+  const overPenalty = (overCount / (normalizedRefTerms.length + 1)) * 0.3; // Lower weight
 
   const driftScore = Math.min(
     1.0,
@@ -440,7 +470,7 @@ function extractTechnicalTerms(text) {
   return terms;
 }
 
-function computeFeatures(referenceAnswer, studentAnswer, numAnchors = 5) {
+function computeFeatures(referenceAnswer, studentAnswer, numAnchors = 12) {
   const anchorsData = extractAnchors(referenceAnswer, numAnchors);
   if (!anchorsData.length || !studentAnswer.trim()) {
     return {
@@ -574,18 +604,40 @@ function predictScore(referenceAnswer, studentAnswer, features, maxScore = 5) {
 // 5. EXPLANATION & VISUALS
 // ─────────────────────────────────────────────────────────────
 
-function shapValues(features, maxScore = 5) {
-  const BASELINE = 0.4;
-  const weights = {
-    feat_avg_semantic: 0.5,
-    feat_max_semantic: 0.15,
-    feat_anchors_covered: 0.15,
-    feat_avg_jaccard: 0.15,
-    feat_avg_edit: 0.05,
+function shapValues(features, scoreObj, maxScore = 5) {
+  const meta = {
+    feat_avg_semantic: { weight: 0.3, pivot: 0.55 },
+    feat_max_semantic: { weight: 0.2, pivot: 0.6 },
+    feat_anchors_covered: { weight: 0.2, pivot: 0.5 },
+    feat_avg_jaccard: { weight: 0.2, pivot: 0.3 },
+    feat_avg_edit: { weight: 0.1, pivot: 0.35 },
   };
+
+  const rawImpacts = {};
+  let hasPositiveLift = false;
+  Object.entries(meta).forEach(([key, cfg]) => {
+    const value = typeof features[key] === "number" ? features[key] : 0;
+    const centered = (value - cfg.pivot) * cfg.weight;
+    rawImpacts[key] = centered;
+    if (centered > 0) hasPositiveLift = true;
+  });
+
+  if (!hasPositiveLift) {
+    Object.entries(meta).forEach(([key, cfg]) => {
+      const value = typeof features[key] === "number" ? features[key] : 0;
+      rawImpacts[key] = value * cfg.weight;
+    });
+  }
+
+  const sumAbs =
+    Object.values(rawImpacts).reduce((acc, val) => acc + Math.abs(val), 0) || 1;
+  const explained = Math.max(0, scoreObj?.final ?? maxScore);
+
   const shap = {};
-  for (let k in weights)
-    shap[k] = (features[k] - BASELINE) * weights[k] * maxScore;
+  Object.entries(rawImpacts).forEach(([key, val]) => {
+    shap[key] = (val / sumAbs) * explained;
+  });
+
   return shap;
 }
 
@@ -703,13 +755,48 @@ function calculateSentenceAttributions(
 }
 
 function calculateConceptClusters(referenceAnswer, studentAnswer, anchors) {
-  return anchors.map((a) => {
-    const sim = tfCosineSim(studentAnswer, a);
+  const TARGET_COUNT = 12;
+  const normalized = [];
+  const seen = new Set();
+
+  function addLabel(label) {
+    if (!label || !label.trim()) return;
+    const clean = label.trim();
+    const key = clean.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    normalized.push(clean);
+  }
+
+  (Array.isArray(anchors) ? anchors : []).forEach((a) => {
+    if (typeof a === "string") addLabel(a);
+  });
+
+  if (normalized.length < TARGET_COUNT) {
+    const techTerms = extractTechnicalTerms(referenceAnswer);
+    for (const term of techTerms) {
+      if (normalized.length >= TARGET_COUNT) break;
+      addLabel(term);
+    }
+  }
+
+  if (normalized.length < TARGET_COUNT) {
+    const fallbackAnchors = extractAnchors(referenceAnswer, TARGET_COUNT);
+    for (const anchor of fallbackAnchors) {
+      if (normalized.length >= TARGET_COUNT) break;
+      if (typeof anchor === "string") addLabel(anchor);
+      else if (anchor?.text) addLabel(anchor.text);
+    }
+  }
+
+  return normalized.slice(0, TARGET_COUNT).map((label) => {
+    const sim = tfCosineSim(studentAnswer, label);
+    const tokenCount = Math.max(1, label.split(/\s+/).length);
     return {
-      label: a,
-      radius: 20 + a.split(" ").length * 10,
+      label,
+      radius: 18 + Math.min(tokenCount, 4) * 6,
       covered:
-        sim >= 0.35 || studentAnswer.toLowerCase().includes(a.toLowerCase()),
+        sim >= 0.35 || studentAnswer.toLowerCase().includes(label.toLowerCase()),
       similarity: sim,
     };
   });
@@ -719,7 +806,7 @@ function calculateConceptClusters(referenceAnswer, studentAnswer, anchors) {
 // 6. TIMELINE & ANCHOR ANALYSIS
 // ─────────────────────────────────────────────────────────────
 
-function extractAnchors(referenceText, maxAnchors = 8) {
+function extractAnchors(referenceText, maxAnchors = 15) {
   /**
    * Extract meaningful anchors/snippets from reference text.
    * Anchors are sentences containing technical concepts.
@@ -837,7 +924,7 @@ function gradeAnswer(referenceAnswer, studentAnswer, maxScore = 5) {
   const timeline = computeTimelineDrift(referenceAnswer, studentAnswer);
   const matrix = computeDriftMatrix(referenceAnswer, studentAnswer);
 
-  const shap = shapValues(features, maxScore);
+  const shap = shapValues(features, scoreObj, maxScore);
   return {
     scoreObj,
     features,
@@ -865,43 +952,49 @@ function gradeAnswer(referenceAnswer, studentAnswer, maxScore = 5) {
  * Y-axis: Student (10 parts)
  */
 function computeDriftMatrix(reference, student) {
-  const refWords = reference.split(/\s+/);
-  const stuWords = student.split(/\s+/);
+  const refWords = reference.split(/\s+/).filter(Boolean);
+  const stuWords = student.split(/\s+/).filter(Boolean);
 
-  if (refWords.length < 100 || stuWords.length < 10) {
+  if (!refWords.length || !stuWords.length) {
     return null;
   }
 
+  const maxCols = 100;
+  const maxRows = 10;
+  const colCount = Math.max(
+    10,
+    Math.min(maxCols, Math.round(refWords.length / 20) || 1),
+  );
+  const rowCount = Math.max(
+    4,
+    Math.min(maxRows, Math.round(stuWords.length / 15) || 1),
+  );
+
   const refChunks = [];
-  const refStep = refWords.length / 100;
-  for (let i = 0; i < 100; i++) {
-    refChunks.push(
-      refWords
-        .slice(Math.floor(i * refStep), Math.floor((i + 1) * refStep))
-        .join(" "),
-    );
+  const refStep = refWords.length / colCount;
+  for (let i = 0; i < colCount; i++) {
+    const start = Math.floor(i * refStep);
+    const end = Math.max(start + 1, Math.floor((i + 1) * refStep));
+    refChunks.push(refWords.slice(start, end).join(" "));
   }
 
   const stuChunks = [];
-  const stuStep = stuWords.length / 10;
-  for (let j = 0; j < 10; j++) {
-    stuChunks.push(
-      stuWords
-        .slice(Math.floor(j * stuStep), Math.floor((j + 1) * stuStep))
-        .join(" "),
-    );
+  const stuStep = stuWords.length / rowCount;
+  for (let j = 0; j < rowCount; j++) {
+    const start = Math.floor(j * stuStep);
+    const end = Math.max(start + 1, Math.floor((j + 1) * stuStep));
+    stuChunks.push(stuWords.slice(start, end).join(" "));
   }
 
-  const matrix = [];
-  for (let j = 0; j < 10; j++) {
-    const row = [];
-    for (let i = 0; i < 100; i++) {
-      row.push(tfCosineSim(refChunks[i], stuChunks[j]));
-    }
-    matrix.push(row);
-  }
+  const matrix = stuChunks.map((stuChunk) =>
+    refChunks.map((refChunk) => tfCosineSim(refChunk, stuChunk)),
+  );
 
-  return matrix;
+  return {
+    grid: matrix,
+    cols: colCount,
+    rows: rowCount,
+  };
 }
 
 /**

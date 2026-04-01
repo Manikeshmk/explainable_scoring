@@ -185,63 +185,56 @@
           >
             <h2 class="mb-4">🔍 Explainability Dashboard</h2>
 
-            <div class="score-grid">
-              <!-- Left Column: Plain English & SLA -->
-              <div>
-                <div class="viz-card glass-card">
-                  <div class="viz-header">
-                    <h3 class="viz-title">📝 Summary Feedback</h3>
-                    <span class="badge" style="margin-bottom: 0"
-                      >Plain English</span
-                    >
-                  </div>
-                  <div id="explanation-body"></div>
+            <div class="xai-grid">
+              <div class="viz-card glass-card xai-card span-2">
+                <div class="viz-header">
+                  <h3 class="viz-title">📝 Summary Feedback</h3>
+                  <span class="badge" style="margin-bottom: 0"
+                    >Plain English</span
+                  >
                 </div>
-
-                <div class="viz-card glass-card">
-                  <div class="viz-header">
-                    <h3 class="viz-title">💬 Sentence Attribution</h3>
-                    <span class="badge" style="margin-bottom: 0"
-                      >ExASAG (BEA 2023)</span
-                    >
-                  </div>
-                  <div id="sentence-attribution-body"></div>
+                <div class="viz-body">
+                  <div id="explanation-body" class="xai-text-body"></div>
                 </div>
               </div>
 
-              <!-- Right Column: Graphs -->
-              <div>
-                <div class="viz-card glass-card">
-                  <div class="viz-header">
-                    <h3 class="viz-title">📊 Metric Impact (SHAP)</h3>
-                  </div>
-                  <div id="shap-body"></div>
-                  <p
-                    style="
-                      font-size: 0.75rem;
-                      color: var(--text-muted);
-                      margin-top: 1rem;
-                    "
-                  >
+              <div class="viz-card glass-card xai-card">
+                <div class="viz-header">
+                  <h3 class="viz-title">📊 Metric Impact (SHAP)</h3>
+                </div>
+                <div class="viz-body">
+                  <div id="shap-body" class="shap-body"></div>
+                  <p class="viz-footnote">
                     Green = positive impact, Red = negative impact compared to
                     average.
                   </p>
                 </div>
+              </div>
 
-                <div class="viz-card glass-card" id="drift-timeline-card">
-                  <div class="viz-header">
-                    <h3 class="viz-title">📍 Semantic Drift Timeline</h3>
-                    <span class="badge" style="margin-bottom: 0"
-                      >Structure Alignment</span
-                    >
-                  </div>
-                  <p
-                    style="
-                      font-size: 0.8rem;
-                      color: var(--text-dim);
-                      margin-bottom: 1rem;
-                    "
+              <div class="viz-card glass-card xai-card">
+                <div class="viz-header">
+                  <h3 class="viz-title">💬 Sentence Attribution</h3>
+                  <span class="badge" style="margin-bottom: 0"
+                    >ExASAG (BEA 2023)</span
                   >
+                </div>
+                <div class="viz-body">
+                  <div
+                    id="sentence-attribution-body"
+                    class="xai-scroll-body"
+                  ></div>
+                </div>
+              </div>
+
+              <div class="viz-card glass-card xai-card span-2" id="drift-timeline-card">
+                <div class="viz-header">
+                  <h3 class="viz-title">📍 Semantic Drift Timeline</h3>
+                  <span class="badge" style="margin-bottom: 0"
+                    >Structure Alignment</span
+                  >
+                </div>
+                <div class="viz-body">
+                  <p class="viz-description">
                     Alignment of Teacher Script (X: 100 parts) vs. Student
                     Summary (Y: 10 parts).
                   </p>
@@ -250,27 +243,16 @@
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div class="viz-card glass-card" style="margin-top: 2rem">
-              <div class="viz-header">
-                <h3 class="viz-title">🗺️ Concept Coverage Map</h3>
+              <div class="viz-card glass-card xai-card span-2 concept-card">
+                <div class="viz-header">
+                  <h3 class="viz-title">🗺️ Concept Coverage Map</h3>
+                </div>
+                <div class="viz-body">
+                  <canvas id="cluster-canvas" width="800" height="300"></canvas>
+                  <div id="cluster-legend" class="cluster-legend"></div>
+                </div>
               </div>
-              <canvas
-                id="cluster-canvas"
-                width="800"
-                height="300"
-                style="width: 100%"
-              ></canvas>
-              <div
-                id="cluster-legend"
-                style="
-                  display: flex;
-                  gap: 2rem;
-                  justify-content: center;
-                  margin-top: 1rem;
-                "
-              ></div>
             </div>
           </div>
         </div>
@@ -392,6 +374,9 @@
             >
               Run Class Evaluation
             </button>
+            <p id="script-eval-status" class="eval-status hidden">
+              Class evaluation in progress...
+            </p>
           </div>
         </div>
 
