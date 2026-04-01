@@ -2,7 +2,7 @@
 
 > **AI-powered short answer grading that explains itself — in plain English.**
 
-🌐 **[Live Demo → manikeshk1.github.io/Explainable_Summary_Score](https://manikeshk1.github.io/Explainable_Summary_Score/)**
+🌐 **[Live Demo → manikeshmk.github.io/Explainable_Summary_Score](https://manikeshmk.github.io/Explainable_Summary_Score/)**
 
 ---
 
@@ -20,11 +20,11 @@ It was trained on the **Mohler Short Answer Grading Dataset** (2,200+ student re
 
 **Everything runs in your browser. No data is sent to any server.**
 
-| Feature | How to use |
-|---|---|
-| **Single Answer Grading** | Go to the [Live Demo](https://manikeshk1.github.io/Explainable_Summary_Score/#demo) → paste reference answer + student answer → click *Compute Score* |
-| **Batch CSV Grading** | Go to [Batch Grade](https://manikeshk1.github.io/Explainable_Summary_Score/#batch) → upload a `.csv` with columns `question`, `desired_answer`, `student_answer` |
-| **Class Evaluation** | Go to [Script Eval](https://manikeshk1.github.io/Explainable_Summary_Score/#script-eval) → upload a Google Meet transcript `.docx` + student summaries `.xlsx` |
+| Feature                   | How to use                                                                                                                                                       |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Single Answer Grading** | Go to the [Live Demo](https://manikeshmk.github.io/Explainable_Summary_Score/#demo) → paste reference answer + student answer → click _Compute Score_            |
+| **Batch CSV Grading**     | Go to [Batch Grade](https://manikeshmk.github.io/Explainable_Summary_Score/#batch) → upload a `.csv` with columns `question`, `desired_answer`, `student_answer` |
+| **Class Evaluation**      | Go to [Script Eval](https://manikeshmk.github.io/Explainable_Summary_Score/#script-eval) → upload a Google Meet transcript `.docx` + student summaries `.xlsx`   |
 
 > ⚠ **Limitation:** The browser uses TF-cosine similarity as a proxy for semantic similarity. For higher accuracy, use the local runner below.
 
@@ -43,7 +43,7 @@ Uses real **sentence-transformers** (`all-MiniLM-L6-v2`) for semantic similarity
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/ManikeshK1/Explainable_Summary_Score.git
+git clone https://github.com/manikeshmk/Explainable_Summary_Score.git
 cd Explainable_Summary_Score
 
 # 2. Create a virtual environment
@@ -79,10 +79,10 @@ python local_grader.py \
 
 Your student summaries spreadsheet must have these columns (column names are matched flexibly):
 
-| Column | Flexible names accepted |
-|---|---|
-| Student email | `emailAddress`, `email`, `mail` |
-| Student name | `name`, `student_name` |
+| Column          | Flexible names accepted         |
+| --------------- | ------------------------------- |
+| Student email   | `emailAddress`, `email`, `mail` |
+| Student name    | `name`, `student_name`          |
 | Student summary | `summary`, `answer`, `response` |
 
 #### Output
@@ -97,11 +97,11 @@ email, name, final, stage1, stage2, semantic, jaccard, note
 
 ## Grading Pipeline
 
-| Stage | What it does |
-|---|---|
-| **Stage 1 — Rule-Based Floor** | Word recall + bigram bonus — sets a guaranteed minimum score |
-| **Stage 2 — NLP Similarity** | Jaccard · 15% + Edit · 5% + Cosine · 15% + Norm Word Count · 15% + Semantic · 50% |
-| **Final Score** | `min(max_score, stage1 + stage2)` |
+| Stage                          | What it does                                                                      |
+| ------------------------------ | --------------------------------------------------------------------------------- |
+| **Stage 1 — Rule-Based Floor** | Word recall + bigram bonus — sets a guaranteed minimum score                      |
+| **Stage 2 — NLP Similarity**   | Jaccard · 15% + Edit · 5% + Cosine · 15% + Norm Word Count · 15% + Semantic · 50% |
+| **Final Score**                | `min(max_score, stage1 + stage2)`                                                 |
 
 ---
 
@@ -134,6 +134,7 @@ python src/model_training.py
 ```
 
 The script will:
+
 1. Load `mohler_dataset_edited.csv`
 2. Extract anchors from each desired answer using KeyBERT
 3. Generate 5 features for every student answer
@@ -154,16 +155,16 @@ The website auto-detects flexible column names: `desired_answer` / `reference_an
 
 ## References
 
-- Ahmad Ayaan & Kok-Why Ng (2024). *Automated grading using natural language processing and semantic analysis.* PMC12171532.
-- Filighera et al. (2023). *Our System for Short Answer Grading using Generative Models.* BEA Workshop, ACL 2023.
-- Mohler et al. (2011). *Learning to grade short answer questions using semantic similarity measures and dependency graph alignments.* ACL.
+- Ahmad Ayaan & Kok-Why Ng (2024). _Automated grading using natural language processing and semantic analysis._ PMC12171532.
+- Filighera et al. (2023). _Our System for Short Answer Grading using Generative Models._ BEA Workshop, ACL 2023.
+- Mohler et al. (2011). _Learning to grade short answer questions using semantic similarity measures and dependency graph alignments._ ACL.
 
 ---
 
 ## License
 
 MIT — free to use, share, and build upon.
-"# Explainable_Scoring" 
-"# Explainable_Scoring" 
-"# Explainable_Scoring" 
-"# Explainable_Scoring" 
+"# Explainable_Scoring"
+"# Explainable_Scoring"
+"# Explainable_Scoring"
+"# Explainable_Scoring"

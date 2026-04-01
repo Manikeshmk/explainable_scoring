@@ -21,6 +21,7 @@
 ### What is ExplainGrade?
 
 ExplainGrade is an **Automated Short Answer Grading (ASAG)** system designed to:
+
 - ✅ **Score** student text responses (0-5 or custom max)
 - ✅ **Explain** exactly why a student received that score
 - ✅ **Provide actionable feedback** in plain English anyone can understand
@@ -28,22 +29,24 @@ ExplainGrade is an **Automated Short Answer Grading (ASAG)** system designed to:
 
 ### Key Components
 
-| Component | Purpose | Technology |
-|-----------|---------|-----------|
-| **Backend (Local)** | High-accuracy grading with NLP | Python 3.9+, sentence-transformers, spaCy |
-| **Frontend (Website)** | Browser-based instant grading | Plain JavaScript, no frameworks |
-| **Data Source** | Training dataset | Mohler Dataset (2,200+ student responses) |
-| **Deployment** | Live website | GitHub Pages (static hosting) |
+| Component              | Purpose                        | Technology                                |
+| ---------------------- | ------------------------------ | ----------------------------------------- |
+| **Backend (Local)**    | High-accuracy grading with NLP | Python 3.9+, sentence-transformers, spaCy |
+| **Frontend (Website)** | Browser-based instant grading  | Plain JavaScript, no frameworks           |
+| **Data Source**        | Training dataset               | Mohler Dataset (2,200+ student responses) |
+| **Deployment**         | Live website                   | GitHub Pages (static hosting)             |
 
 ### Two Ways to Use
 
 #### 🌐 Browser Version (Zero Install)
-- URL: [Live Demo](https://manikeshk1.github.io/Explainable_Summary_Score/)
+
+- URL: [Live Demo](https://manikeshmk.github.io/Explainable_Summary_Score/)
 - **Pros:** No installation, runs instantly, privacy (no server)
 - **Cons:** Less accurate (TF-based approximation instead of real semantic models)
 - **Best for:** Quick demos, single samples, learning the system
 
 #### 🖥️ Local Python Version
+
 - Command: `python local_grader.py --docx transcript.docx --xlsx summaries.xlsx`
 - **Pros:** Higher accuracy (real sentence-transformers), batch processing, custom scoring
 - **Cons:** Requires Python setup, slower first run (model download)
@@ -129,20 +132,23 @@ ExplainGrade is an **Automated Short Answer Grading (ASAG)** system designed to:
 ### 3.2 Installation & Setup
 
 #### Step 1: Clone Repository
+
 ```bash
-git clone https://github.com/ManikeshK1/Explainable_Summary_Score.git
+git clone https://github.com/manikeshmk/Explainable_Summary_Score.git
 cd Explainable_Summary_Score
 ```
 
 #### Step 2: Create Virtual Environment
 
 **Windows:**
+
 ```bash
 python -m venv spacy-env
 spacy-env\Scripts\activate
 ```
 
 **macOS/Linux:**
+
 ```bash
 python3 -m venv spacy-env
 source spacy-env/bin/activate
@@ -155,6 +161,7 @@ pip install -r requirements.txt
 ```
 
 **What gets installed:**
+
 - `sentence-transformers` (2.7.0+) — Semantic similarity models
 - `torch` (2.0.0+) — Deep learning framework
 - `python-docx` — Read .docx files
@@ -186,21 +193,23 @@ python local_grader.py \
 
 #### Parameter Reference
 
-| Parameter | Required | Default | Description |
-|-----------|----------|---------|-------------|
-| `--docx` | ✅ Yes | — | Path to teacher's transcript (Google Meet .docx export) |
-| `--xlsx` | ✅ Yes | — | Path to student summaries spreadsheet |
-| `--max-score` | ❌ No | `5.0` | Maximum score per student |
-| `--output` | ❌ No | `grading_results.csv` | Output filename |
+| Parameter     | Required | Default               | Description                                             |
+| ------------- | -------- | --------------------- | ------------------------------------------------------- |
+| `--docx`      | ✅ Yes   | —                     | Path to teacher's transcript (Google Meet .docx export) |
+| `--xlsx`      | ✅ Yes   | —                     | Path to student summaries spreadsheet                   |
+| `--max-score` | ❌ No    | `5.0`                 | Maximum score per student                               |
+| `--output`    | ❌ No    | `grading_results.csv` | Output filename                                         |
 
 ### 3.4 Input File Formats
 
 #### .docx File (Teacher Transcript)
+
 - Export from Google Meet as `.docx`
 - Contains the reference answer / lecture transcript
 - System automatically extracts text and technical terms
 
 **Expected structure:**
+
 ```
 [Paragraphs of lecture/reference content]
 ```
@@ -209,13 +218,14 @@ python local_grader.py \
 
 **Required columns (flexible naming):**
 
-| Actual Name | Flexible Alternatives |
-|------------|----------------------|
-| `emailAddress` | `email`, `mail` |
-| `name` | `student_name`, `Student Name` |
-| `summary` | `answer`, `response`, `student_answer`, `text` |
+| Actual Name    | Flexible Alternatives                          |
+| -------------- | ---------------------------------------------- |
+| `emailAddress` | `email`, `mail`                                |
+| `name`         | `student_name`, `Student Name`                 |
+| `summary`      | `answer`, `response`, `student_answer`, `text` |
 
 **Example:**
+
 ```
 emailAddress          | name            | summary
 john.doe@school.edu  | John Doe        | The professor explained that...
@@ -234,16 +244,16 @@ jane.smith@school.edu,Jane Smith,4.12,3.0,1.12,0.89,0.78,""
 
 **Column explanations:**
 
-| Column | Type | Range | Meaning |
-|--------|------|-------|---------|
-| `email` | string | — | Student email address |
-| `name` | string | — | Student name |
-| `final` | float | 0–maxScore | **Final grade** (what to use) |
-| `stage1` | float | 0–maxScore | Rule-based floor score |
-| `stage2` | float | 0–maxScore | NLP semantic score |
-| `semantic` | float | 0–1 | Semantic similarity metric (S_tf) |
-| `jaccard` | float | 0–1 | Jaccard overlap (S_j) |
-| `note` | string | — | Error message or explanation |
+| Column     | Type   | Range      | Meaning                           |
+| ---------- | ------ | ---------- | --------------------------------- |
+| `email`    | string | —          | Student email address             |
+| `name`     | string | —          | Student name                      |
+| `final`    | float  | 0–maxScore | **Final grade** (what to use)     |
+| `stage1`   | float  | 0–maxScore | Rule-based floor score            |
+| `stage2`   | float  | 0–maxScore | NLP semantic score                |
+| `semantic` | float  | 0–1        | Semantic similarity metric (S_tf) |
+| `jaccard`  | float  | 0–1        | Jaccard overlap (S_j)             |
+| `note`     | string | —          | Error message or explanation      |
 
 ### 3.6 Processing Pipeline Line-by-Line
 
@@ -266,25 +276,25 @@ reference_terms = extract_technical_terms(transcript)
 # 4. For each student:
 for student in summaries:
     student_answer = student['summary']
-    
+
     # STAGE 1: Rule-based floor
     stage1_score = compute_rule_based_floor(
         reference_terms,
         student_answer,
         max_score
     )
-    
+
     # STAGE 2: NLP metrics computation
     sj = jaccard_similarity(transcript, student_answer)
     se = edit_distance_similarity(transcript, student_answer)
     sc = tf_cosine_similarity(transcript, student_answer)
     sw = word_count_normalized(reference_terms, student_answer)
     stf = semantic_tfidf_similarity(transcript, student_answer)
-    
+
     # Combine Stage 2 metrics
     c_nlp = 0.15*sj + 0.05*se + 0.15*sc + 0.15*sw
     c = 0.5*stf + 0.5*c_nlp
-    
+
     # Apply special confidence rule
     if stf < 0.2:
         stage2_score = 0
@@ -292,10 +302,10 @@ for student in summaries:
         stage2_score = max_score
     else:
         stage2_score = c * max_score
-    
+
     # FINAL SCORE
     final_score = min(max_score, stage1_score + stage2_score)
-    
+
     # 5. Write to CSV
     write_row_to_csv(student, final_score, stage1, stage2, ...)
 
@@ -310,6 +320,7 @@ print("✅ Grading complete. Results saved to grading_results.csv")
 **Purpose:** Identify important keywords from reference answer
 
 **Algorithm:**
+
 1. If spaCy is installed: Use POS tagging (extract NOUN + PROPN only)
 2. If not: Use fallback (words ≥4 chars, not in stopword/verb lists)
 
@@ -341,48 +352,30 @@ print("✅ Grading complete. Results saved to grading_results.csv")
 
 The website is hosted on **GitHub Pages** and runs **100% in the browser**. No server backend.
 
-**URL:** [manikeshk1.github.io/Explainable_Summary_Score](https://manikeshk1.github.io/Explainable_Summary_Score/)
+**URL:** [manikeshmk.github.io/Explainable_Summary_Score](https://manikeshmk.github.io/Explainable_Summary_Score/)
 
 ### 4.2 Key Files
 
 #### HTML Structure: `docs/index.html`
 
 ```html
-┌─ NAVBAR
-│  ├─ Logo
-│  ├─ Nav links: Pipeline | Live Demo | Batch Grade | Chat | Research
-│  └─ Theme toggle
-├─ HERO SECTION
-│  └─ Call-to-action buttons
-├─ PIPELINE SECTION
-│  └─ Explanation of 2-stage process
-├─ DEMO SECTION (id="demo")
-│  ├─ Reference answer input
-│  ├─ Student answer input
-│  ├─ Max score selector
-│  ├─ "Compute Score" button
-│  └─ Results display area
-├─ BATCH GRADE SECTION (id="batch")
-│  ├─ CSV file upload
-│  ├─ Download results button
-│  └─ Results table
-├─ SCRIPT EVAL SECTION (id="script-eval")
-│  ├─ DOCX upload (transcript)
-│  ├─ XLSX upload (summaries)
-│  ├─ Max score input
-│  └─ Grade button
-├─ CHAT ASSISTANT SECTION (id="chat")
-│  ├─ Chat messages area
-│  ├─ Input field
-│  └─ Send button
-├─ HOW TO USE SECTION (id="how-to-use")
-│  └─ Setup & usage instructions
+┌─ NAVBAR │ ├─ Logo │ ├─ Nav links: Pipeline | Live Demo | Batch Grade | Chat |
+Research │ └─ Theme toggle ├─ HERO SECTION │ └─ Call-to-action buttons ├─
+PIPELINE SECTION │ └─ Explanation of 2-stage process ├─ DEMO SECTION (id="demo")
+│ ├─ Reference answer input │ ├─ Student answer input │ ├─ Max score selector │
+├─ "Compute Score" button │ └─ Results display area ├─ BATCH GRADE SECTION
+(id="batch") │ ├─ CSV file upload │ ├─ Download results button │ └─ Results
+table ├─ SCRIPT EVAL SECTION (id="script-eval") │ ├─ DOCX upload (transcript) │
+├─ XLSX upload (summaries) │ ├─ Max score input │ └─ Grade button ├─ CHAT
+ASSISTANT SECTION (id="chat") │ ├─ Chat messages area │ ├─ Input field │ └─ Send
+button ├─ HOW TO USE SECTION (id="how-to-use") │ └─ Setup & usage instructions
 └─ FOOTER
 ```
 
 #### Styling: `docs/style.css`
 
 **Features:**
+
 - Dark & Light theme support (`data-theme="dark|light"`)
 - Responsive design (mobile-first)
 - Smooth animations and transitions
@@ -391,10 +384,11 @@ The website is hosted on **GitHub Pages** and runs **100% in the browser**. No s
 - Score visualization colors
 
 **Theme Variables:**
+
 ```css
---primary: #6366f1      /* Main brand color (Indigo) */
---surface: #f3f4f6      /* Light backgrounds */
---text: #1f2937         /* Text color (switches for dark mode) */
+--primary: #6366f1 /* Main brand color (Indigo) */ --surface: #f3f4f6
+  /* Light backgrounds */ --text: #1f2937
+  /* Text color (switches for dark mode) */;
 ```
 
 ### 4.3 Main JavaScript Files
@@ -402,6 +396,7 @@ The website is hosted on **GitHub Pages** and runs **100% in the browser**. No s
 #### `app.js` — UI Controller
 
 **Responsibilities:**
+
 1. Theme management (dark/light toggle)
 2. Navbar scroll behavior
 3. Scroll-reveal animations
@@ -421,7 +416,7 @@ function computeScore() {
   const ref = document.getElementById('ref-answer').value;
   const stu = document.getElementById('stu-answer').value;
   const max = parseFloat(document.getElementById('max-score').value) || 5;
-  
+
   const result = scoreStudent(ref, stu, max);
   displayResults(result);
 }
@@ -429,7 +424,7 @@ function computeScore() {
 // Batch CSV grading
 async function processBatchCSV(file) {
   const rows = await parseCSV(file);
-  const results = rows.map(row => 
+  const results = rows.map(row =>
     scoreStudent(row.desired_answer, row.student_answer, max_score)
   );
   downloadCSV(results);
@@ -439,11 +434,11 @@ async function processBatchCSV(file) {
 async function processScriptEval() {
   const docx = await readDocxFile(docxFile);
   const xlsx = await readXlsxFile(xlsxFile);
-  
+
   const ref_text = extractText(docx);
   const ref_terms = extractAnchors(ref_text);
-  
-  const results = xlsx.map(student => 
+
+  const results = xlsx.map(student =>
     scoreStudent(ref_text, student.summary, max_score)
   );
   downloadCSV(results);
@@ -504,19 +499,19 @@ function scoreStudent(referenceAnswer, studentAnswer, maxScore) {
   const stage1 = computeRuleBasedFloor(
     referenceAnswer,
     studentAnswer,
-    maxScore
+    maxScore,
   );
-  
+
   // STAGE 2: NLP semantic scoring
   const sj = jaccardSimilarity(referenceAnswer, studentAnswer);
   const se = editSimilarity(referenceAnswer, studentAnswer);
   const sc = tfCosineSim(referenceAnswer, studentAnswer);
   const sw = normalizedWordCount(referenceAnswer, studentAnswer);
   const stf = tfCosineSim(referenceAnswer, studentAnswer); // proxy for semantic
-  
-  const cnlp = 0.15*sj + 0.05*se + 0.15*sc + 0.15*sw;
-  const c = 0.5*stf + 0.5*cnlp;
-  
+
+  const cnlp = 0.15 * sj + 0.05 * se + 0.15 * sc + 0.15 * sw;
+  const c = 0.5 * stf + 0.5 * cnlp;
+
   let stage2;
   if (stf < 0.2) {
     stage2 = 0;
@@ -525,12 +520,12 @@ function scoreStudent(referenceAnswer, studentAnswer, maxScore) {
   } else {
     stage2 = c * maxScore;
   }
-  
+
   return {
     final: Math.min(maxScore, stage1 + stage2),
     stage1,
     stage2,
-    metrics: { sj, se, sc, sw, stf }
+    metrics: { sj, se, sc, sw, stf },
   };
 }
 ```
@@ -571,6 +566,7 @@ if (query includes "how works" || "explain")
 ### 4.4 Step-by-Step: Single Answer Grading
 
 1. **User Input**
+
    ```
    Reference: "A vector is a mathematical object with magnitude and direction"
    Student: "Vectors have magnitude and direction"
@@ -578,8 +574,9 @@ if (query includes "how works" || "explain")
    ```
 
 2. **JavaScript Event Handler (app.js)**
+
    ```javascript
-   document.getElementById('score-btn').addEventListener('click', () => {
+   document.getElementById("score-btn").addEventListener("click", () => {
      const result = scoreStudent(ref, stu, 5);
      displayResults(result);
    });
@@ -594,9 +591,11 @@ if (query includes "how works" || "explain")
 4. **Display Results (app.js)**
    ```javascript
    function displayResults(result) {
-     document.getElementById('final-score').textContent = result.final.toFixed(2);
-     document.getElementById('explanation').textContent = 
-       generateExplanation(result.metrics);
+     document.getElementById("final-score").textContent =
+       result.final.toFixed(2);
+     document.getElementById("explanation").textContent = generateExplanation(
+       result.metrics,
+     );
      // Plot metrics on chart
    }
    ```
@@ -608,6 +607,7 @@ if (query includes "how works" || "explain")
 2. **File is read** (JavaScript FileReader API)
 
 3. **Parse CSV**
+
    ```javascript
    function parseCSV(file) {
      const text = await file.text();
@@ -621,10 +621,11 @@ if (query includes "how works" || "explain")
    ```
 
 4. **Score each row**
+
    ```javascript
-   const results = rows.map(row => ({
+   const results = rows.map((row) => ({
      ...row,
-     final: scoreStudent(row.desired_answer, row.student_answer, 5).final
+     final: scoreStudent(row.desired_answer, row.student_answer, 5).final,
    }));
    ```
 
@@ -632,11 +633,11 @@ if (query includes "how works" || "explain")
    ```javascript
    function downloadCSV(results) {
      const csv = convertToCSV(results);
-     const blob = new Blob([csv], { type: 'text/csv' });
+     const blob = new Blob([csv], { type: "text/csv" });
      const url = URL.createObjectURL(blob);
-     const a = document.createElement('a');
+     const a = document.createElement("a");
      a.href = url;
-     a.download = 'results.csv';
+     a.download = "results.csv";
      a.click();
    }
    ```
@@ -646,6 +647,7 @@ if (query includes "how works" || "explain")
 1. **User uploads DOCX** (teacher transcript)
 
 2. **DOCX is parsed** using `mammoth.js` library
+
    ```javascript
    const doc = await mammoth.convertToHtml({ arrayBuffer: docxBuffer });
    const transcript = extractPlainText(doc.value);
@@ -654,6 +656,7 @@ if (query includes "how works" || "explain")
 3. **User uploads XLSX** (student summaries)
 
 4. **XLSX is parsed** using a CSV parsing library
+
    ```javascript
    const wb = await XLSX.read(xlsxFile);
    const ws = wb.Sheets[wb.SheetNames[0]];
@@ -661,11 +664,13 @@ if (query includes "how works" || "explain")
    ```
 
 5. **Extract reference keywords**
+
    ```javascript
    const referenceTerms = extractTechnicalTerms(transcript);
    ```
 
 6. **Score each student**
+
    ```javascript
    const results = data.map(student => ({
      email: student.email,
@@ -828,19 +833,19 @@ cloud/
 
 ### File Purposes Quick Reference
 
-| File | Type | Purpose |
-|------|------|---------|
-| `local_grader.py` | Python | **CLI tool to grade student summaries against a transcript** |
-| `anchor_extraction.py` | Python | Extract keyphrases from text using KeyBERT |
-| `semantic_mapping.py` | Python | Compute similarity metrics (Jaccard, edit, semantic) |
-| `model_training.py` | Python | (Historical) Train ML models using extracted features |
-| `index.html` | Web | Main HTML structure for website |
-| `scorer.js` | Web | **Core two-stage scoring algorithm in JavaScript** |
-| `app.js` | Web | UI events, batch processing, results display |
-| `chat.js` | Web | Chat assistant that answers questions about grades |
-| `style.css` | Web | Styling for dark/light themes, responsive design |
-| `requirements.txt` | Config | Python package list (`pip install -r requirements.txt`) |
-| `mohler_dataset_edited.csv` | Data | Training data (2200+ student responses with scores) |
+| File                        | Type   | Purpose                                                      |
+| --------------------------- | ------ | ------------------------------------------------------------ |
+| `local_grader.py`           | Python | **CLI tool to grade student summaries against a transcript** |
+| `anchor_extraction.py`      | Python | Extract keyphrases from text using KeyBERT                   |
+| `semantic_mapping.py`       | Python | Compute similarity metrics (Jaccard, edit, semantic)         |
+| `model_training.py`         | Python | (Historical) Train ML models using extracted features        |
+| `index.html`                | Web    | Main HTML structure for website                              |
+| `scorer.js`                 | Web    | **Core two-stage scoring algorithm in JavaScript**           |
+| `app.js`                    | Web    | UI events, batch processing, results display                 |
+| `chat.js`                   | Web    | Chat assistant that answers questions about grades           |
+| `style.css`                 | Web    | Styling for dark/light themes, responsive design             |
+| `requirements.txt`          | Config | Python package list (`pip install -r requirements.txt`)      |
+| `mohler_dataset_edited.csv` | Data   | Training data (2200+ student responses with scores)          |
 
 ---
 
@@ -851,6 +856,7 @@ cloud/
 #### ❌ "ModuleNotFoundError: No module named 'python_docx'"
 
 **Solution:**
+
 ```bash
 pip install python-docx
 pip install -r requirements.txt
@@ -861,6 +867,7 @@ pip install -r requirements.txt
 **Context:** System tries to use spaCy for better accuracy, falls back gracefully if not installed.
 
 **To enable spaCy:**
+
 ```bash
 pip install spacy
 python -m spacy download en_core_web_sm
@@ -871,11 +878,13 @@ python -m spacy download en_core_web_sm
 #### ❌ "XLSX file has wrong column names"
 
 **Solution:** Check your .xlsx file has columns matching:
+
 - `emailAddress` or `email` or `mail`
 - `name` or `student_name`
 - `summary` or `answer` or `response`
 
 **Example:**
+
 ```python
 df = pd.read_excel('summaries.xlsx')
 print(df.columns)  # Print actual column names
@@ -888,6 +897,7 @@ Then rename as needed or adjust in spreadsheet.
 **This is normal:** The system downloads `all-MiniLM-L6-v2` (~90 MB) on first execution.
 
 **To check:**
+
 ```bash
 # See what's downloading
 python local_grader.py --docx test.docx --xlsx test.xlsx
@@ -904,11 +914,13 @@ This is cached after first run, so subsequent runs are instant.
 #### ❌ Score shows 0 for correct answer
 
 **Possible causes:**
+
 1. Reference answer is very short (< 5 words) → Try longer reference
 2. Student answer shares NO words with reference → Naturally gets low score
 3. Browser JavaScript error → Check console (F12)
 
 **Debugging:**
+
 ```javascript
 // Open browser console (F12) and test:
 scoreStudent("Python is a programming language", "Python programming", 5);
@@ -918,11 +930,13 @@ scoreStudent("Python is a programming language", "Python programming", 5);
 #### ❌ Batch CSV upload doesn't work
 
 **Check:**
+
 1. CSV has correct columns: `question`, `desired_answer`, `student_answer`
 2. No special characters breaking parsing
 3. File size < 10 MB (browser memory limit)
 
 **Test:**
+
 ```csv
 question,desired_answer,student_answer
 What is a vector?,A vector has magnitude and direction,vectors have magnitude
@@ -933,6 +947,7 @@ What is a vector?,A vector has magnitude and direction,vectors have magnitude
 **Reason:** `grading_results.csv` must be in `/docs/` folder
 
 **Fix:**
+
 1. Run `python local_grader.py ...` in main folder
 2. Copy resulting `grading_results.csv` to `docs/` folder
 3. Reload website
@@ -943,7 +958,7 @@ What is a vector?,A vector has magnitude and direction,vectors have magnitude
 
 ```javascript
 // Check if localStorage is available:
-console.log(localStorage.getItem('ess-theme'));
+console.log(localStorage.getItem("ess-theme"));
 
 // If empty, browser is blocking storage (private mode?):
 // Try normal browsing mode or check browser privacy settings
@@ -956,6 +971,7 @@ console.log(localStorage.getItem('ess-theme'));
 **Cause:** JavaScript scoring metrics are heavy (tokenization, TF calculation)
 
 **Solution:**
+
 - For batch > 100 rows: Use Python local version instead
 - Browser version: OK for< 10 answers
 
@@ -963,14 +979,15 @@ console.log(localStorage.getItem('ess-theme'));
 
 **Causes & Solutions:**
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| **First run slow** | Downloading models | Normal, happens once |
-| **Subsequent runs slow** | Large transcript | Can't avoid (need to process text) |
-| **Memory spike** | All-MiniLM model | Requires 4+ GB RAM |
-| **Variable completion** | Dataset size | More students = longer process |
+| Issue                    | Cause              | Solution                           |
+| ------------------------ | ------------------ | ---------------------------------- |
+| **First run slow**       | Downloading models | Normal, happens once               |
+| **Subsequent runs slow** | Large transcript   | Can't avoid (need to process text) |
+| **Memory spike**         | All-MiniLM model   | Requires 4+ GB RAM                 |
+| **Variable completion**  | Dataset size       | More students = longer process     |
 
 **Benchmark:**
+
 - 10 students: ~2 seconds
 - 100 students: ~15 seconds
 - 1000 students: ~2 minutes
@@ -986,11 +1003,13 @@ console.log(localStorage.getItem('ess-theme'));
 **What:** Ensures minimum credit for actually matching key content
 
 **Algorithm:**
+
 1. Extract technical terms from reference answer (NOUN/PROPN POS tags)
 2. Count how many appear in student answer
 3. Score = (matches / total) × maxScore
 
 **Example:**
+
 ```
 Reference: "A binary tree is a tree where each node has at most 2 children"
 Technical terms: [tree, node, children, binary]
@@ -1033,6 +1052,7 @@ S_tf (Semantic TF-IDF): Semantic meaning via TF-IDF filtered tokens
 ```
 
 **Calculation:**
+
 ```
 C_nlp = 0.15·S_j + 0.05·S_e + 0.15·S_c + 0.15·S_w
 
@@ -1048,6 +1068,7 @@ Stage2 = F × maxScore
 ```
 
 **Final Score:**
+
 ```
 Final = min(maxScore, Stage1 + Stage2)
 
@@ -1056,11 +1077,11 @@ Capped at maxScore to prevent over-scoring
 
 ### Why Two Stages?
 
-| Stage | Strength | Weakness |
-|-------|----------|----------|
-| **Rule-Based** | Can't give unfair credit; validates actual content | Doesn't capture paraphrase |
-| **NLP Semantic** | Captures meaning even if phrased differently | Can be too lenient |
-| **Combined** | Ensures both content AND quality of answer | Balanced scoring |
+| Stage            | Strength                                           | Weakness                   |
+| ---------------- | -------------------------------------------------- | -------------------------- |
+| **Rule-Based**   | Can't give unfair credit; validates actual content | Doesn't capture paraphrase |
+| **NLP Semantic** | Captures meaning even if phrased differently       | Can be too lenient         |
+| **Combined**     | Ensures both content AND quality of answer         | Balanced scoring           |
 
 ---
 
@@ -1133,5 +1154,5 @@ Both use the same **two-stage scoring pipeline** (Rule-based floor + NLP semanti
 
 **Last Updated:** March 28, 2026  
 **Version:** 2.0 (Chat & Scoring Logic Fixes)  
-**Live Website:** [https://manikeshk1.github.io/Explainable_Summary_Score/](https://manikeshk1.github.io/Explainable_Summary_Score/)  
-**GitHub:** [https://github.com/ManikeshK1/Explainable_Summary_Score](https://github.com/ManikeshK1/Explainable_Summary_Score)
+**Live Website:** [https://manikeshmk.github.io/Explainable_Summary_Score/](https://manikeshmk.github.io/Explainable_Summary_Score/)  
+**GitHub:** [https://github.com/manikeshmk/Explainable_Summary_Score](https://github.com/manikeshmk/Explainable_Summary_Score)

@@ -1,6 +1,31 @@
 {
+  "name": "explaingrade",
+  "version": "1.0.0",
+  "description": "Explainable Automated Short Answer Grading System - Browser-based with local Python backend option",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "serve": "npx serve .",
+    "test": "echo \"No tests configured yet\""
+  },
+  "keywords": [
+    "asag",
+    "grading",
+    "nlp",
+    "machine-learning",
+    "education"
+  ],
+  "author": "manikeshmk",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
   "dependencies": {
     "mammoth": "^1.11.0",
     "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "serve": "^14.2.0"
   }
 }
