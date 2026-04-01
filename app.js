@@ -10,47 +10,85 @@
 // ─────────────────────────────────────────
 
 const libs = {
-    Papa: typeof Papa !== "undefined",
-    mammoth: typeof mammoth !== "undefined",
-    XLSX: typeof XLSX !== "undefined",
+  Papa: typeof Papa !== "undefined",
+  mammoth: typeof mammoth !== "undefined",
+  XLSX: typeof XLSX !== "undefined",
 };
 
 function checkLibrary(name) {
-    if (!libs[name]) {
-        console.warn(`⚠️ Library ${name} not loaded.`);
-        return false;
-    }
-    return true;
+  if (!libs[name]) {
+    console.warn(`⚠️ Library ${name} not loaded.`);
+    return false;
+  }
+  return true;
 }
 
 // Theme Toggle
 const themeToggle = document.getElementById("theme-toggle");
 if (themeToggle) {
-    themeToggle.addEventListener("click", () => {
-        const current = document.documentElement.getAttribute("data-theme");
-        const next = current === "dark" ? "light" : "dark";
-        document.documentElement.setAttribute("data-theme", next);
-        themeToggle.textContent = next === "dark" ? "☀️" : "🌙";
-    });
+  themeToggle.addEventListener("click", () => {
+    const current = document.documentElement.getAttribute("data-theme");
+    const next = current === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    themeToggle.textContent = next === "dark" ? "☀️" : "🌙";
+  });
 }
 
 // Navbar Scroll Effect
 const navbar = document.getElementById("navbar");
-window.addEventListener("scroll", () => {
+window.addEventListener(
+  "scroll",
+  () => {
     if (navbar) navbar.classList.toggle("scrolled", window.scrollY > 50);
-}, { passive: true });
+  },
+  { passive: true },
+);
 
-// Toasts
+// ─────────────────────────────────────────
+// ENHANCED MODAL POPUP SYSTEM
+// ─────────────────────────────────────────
+
+function showPopup(title, message, type = "success") {
+  let html = `
+    <div style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999;">
+        <div style="background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:12px; padding:2rem; max-width:400px; box-shadow:0 20px 60px rgba(0,0,0,0.3); animation:slideIn 0.3s ease;">
+            <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+                <span style="font-size:2rem;">${
+                  type === "success"
+                    ? "✅"
+                    : type === "error"
+                      ? "❌"
+                      : type === "warning"
+                        ? "⚠️"
+                        : "ℹ️"
+                }</span>
+                <h3 style="margin:0; font-size:1.2rem; color:var(--text-primary);">${title}</h3>
+            </div>
+            <p style="margin:1rem 0 2rem; color:var(--text-dim); line-height:1.6;">${message}</p>
+            <button onclick="this.closest('[style*=z-index]').remove()" style="width:100%; padding:0.75rem; background:var(--primary); color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600; font-size:0.9rem;">OK</button>
+        </div>
+    </div>
+    <style>
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+    `;
+  document.body.insertAdjacentHTML("beforeend", html);
+}
+
+// Toasts (quick notifications)
 function showToast(msg, type = "success") {
-    const toast = document.getElementById("toast");
-    if (!toast) return;
-    toast.textContent = (type === "success" ? "✅ " : "❌ ") + msg;
-    toast.classList.remove("hidden");
-    toast.style.display = "block";
-    setTimeout(() => {
-        toast.classList.add("hidden");
-        toast.style.display = "none";
-    }, 3500);
+  const toast = document.getElementById("toast");
+  if (!toast) return;
+  toast.textContent = (type === "success" ? "✅ " : "❌ ") + msg;
+  toast.classList.remove("hidden");
+  toast.style.display = "block";
+  setTimeout(() => {
+    toast.classList.add("hidden");
+    toast.style.display = "none";
+  }, 3500);
 }
 
 // ─────────────────────────────────────────
@@ -58,177 +96,188 @@ function showToast(msg, type = "success") {
 // ─────────────────────────────────────────
 
 function renderScore(scoreObj, max) {
-    const valEl = document.getElementById("score-val");
-    const maxEl = document.getElementById("score-max-val");
-    const circle = document.getElementById("score-circle");
-    const verdict = document.getElementById("score-verdict");
+  const valEl = document.getElementById("score-val");
+  const maxEl = document.getElementById("score-max-val");
+  const circle = document.getElementById("score-circle");
+  const verdict = document.getElementById("score-verdict");
 
-    if (!valEl || !circle) return;
+  if (!valEl || !circle) return;
 
-    const final = scoreObj.final;
-    const pct = (final / max) * 100;
+  const final = scoreObj.final;
+  const pct = (final / max) * 100;
 
-    valEl.textContent = final.toFixed(1);
-    maxEl.textContent = `/ ${max}`;
-    circle.style.setProperty("--pct", `${pct}%`);
+  valEl.textContent = final.toFixed(1);
+  maxEl.textContent = `/ ${max}`;
+  circle.style.setProperty("--pct", `${pct}%`);
 
-    let msg = "";
-    if (pct >= 85) msg = "Excellent understanding of core concepts.";
-    else if (pct >= 65) msg = "Good alignment with reference material.";
-    else if (pct >= 40) msg = "Partially captured the main ideas.";
-    else msg = "Significant gaps in conceptual coverage.";
-    verdict.textContent = msg;
+  let msg = "";
+  if (pct >= 85) msg = "Excellent understanding of core concepts.";
+  else if (pct >= 65) msg = "Good alignment with reference material.";
+  else if (pct >= 40) msg = "Partially captured the main ideas.";
+  else msg = "Significant gaps in conceptual coverage.";
+  verdict.textContent = msg;
 }
 
 function renderExplanation(explanation) {
-    const body = document.getElementById("explanation-body");
-    if (!body) return;
-    body.innerHTML = "";
+  const body = document.getElementById("explanation-body");
+  if (!body) return;
+  body.innerHTML = "";
 
-    explanation.sections.forEach(s => {
-        const div = document.createElement("div");
-        div.className = "ex-row";
-        div.innerHTML = `<span style="font-size: 1.2rem;">${s.icon}</span> <div class="ex-text">${s.text}</div>`;
-        body.appendChild(div);
-    });
+  explanation.sections.forEach((s) => {
+    const div = document.createElement("div");
+    div.className = "ex-row";
+    div.innerHTML = `<span style="font-size: 1.2rem;">${s.icon}</span> <div class="ex-text">${s.text}</div>`;
+    body.appendChild(div);
+  });
 
-    if (explanation.tips.length > 0) {
-        const tipsDiv = document.createElement("div");
-        tipsDiv.style.marginTop = "1rem";
-        tipsDiv.style.padding = "1rem";
-        tipsDiv.style.background = "rgba(108, 99, 255, 0.05)";
-        tipsDiv.style.borderRadius = "8px";
-        tipsDiv.innerHTML = `<strong style="display:block; margin-bottom:0.5rem; color:var(--primary);">💡 Recommendations:</strong>` +
-            `<ul style="font-size:0.85rem; padding-left:1.5rem;">${explanation.tips.map(t => `<li>${t}</li>`).join("")}</ul>`;
-        body.appendChild(tipsDiv);
-    }
+  if (explanation.tips.length > 0) {
+    const tipsDiv = document.createElement("div");
+    tipsDiv.style.marginTop = "1rem";
+    tipsDiv.style.padding = "1rem";
+    tipsDiv.style.background = "rgba(108, 99, 255, 0.05)";
+    tipsDiv.style.borderRadius = "8px";
+    tipsDiv.innerHTML =
+      `<strong style="display:block; margin-bottom:0.5rem; color:var(--primary);">💡 Recommendations:</strong>` +
+      `<ul style="font-size:0.85rem; padding-left:1.5rem;">${explanation.tips.map((t) => `<li>${t}</li>`).join("")}</ul>`;
+    body.appendChild(tipsDiv);
+  }
 }
 
 function renderShap(shap, max) {
-    const body = document.getElementById("shap-body");
-    if (!body) return;
+  const body = document.getElementById("shap-body");
+  if (!body) return;
 
-    const labels = {
-        feat_avg_semantic: "General Meaning",
-        feat_max_semantic: "Peak Concept Match",
-        feat_anchors_covered: "Core Topics",
-        feat_avg_jaccard: "Vocabulary",
-        feat_avg_edit: "Phrasing"
-    };
+  const labels = {
+    feat_avg_semantic: "General Meaning",
+    feat_max_semantic: "Peak Concept Match",
+    feat_anchors_covered: "Core Topics",
+    feat_avg_jaccard: "Vocabulary",
+    feat_avg_edit: "Phrasing",
+  };
 
-    body.innerHTML = Object.entries(shap).map(([key, val]) => {
-        const isPos = val >= 0;
-        const width = Math.min(100, (Math.abs(val) / (max * 0.5)) * 100);
-        return `
+  body.innerHTML = Object.entries(shap)
+    .map(([key, val]) => {
+      const isPos = val >= 0;
+      const width = Math.min(100, (Math.abs(val) / (max * 0.5)) * 100);
+      return `
             <div style="margin-bottom: 1rem;">
                 <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.3rem;">
                     <span>${labels[key] || key}</span>
-                    <span style="color:${isPos ? 'var(--accent1)' : 'var(--danger)'}">${val >= 0 ? '+' : ''}${val.toFixed(2)}</span>
+                    <span style="color:${isPos ? "var(--accent1)" : "var(--danger)"}">${val >= 0 ? "+" : ""}${val.toFixed(2)}</span>
                 </div>
                 <div class="ex-bar-wrap">
-                    <div class="ex-bar ${isPos ? 'ex-bar-pos' : 'ex-bar-neg'}" style="width:${width}%;"></div>
+                    <div class="ex-bar ${isPos ? "ex-bar-pos" : "ex-bar-neg"}" style="width:${width}%;"></div>
                 </div>
             </div>
         `;
-    }).join("");
+    })
+    .join("");
 }
 
 /**
  * NEW: Advanced Semantic Drift Timeline (100x10 Matrix)
  */
 function renderDriftMatrix(matrix) {
-    const container = document.getElementById("drift-matrix");
-    if (!container || !matrix) return;
+  const container = document.getElementById("drift-matrix");
+  if (!container || !matrix) return;
 
-    container.innerHTML = "";
-    // X is Teacher (100 parts), Y is Student (10 parts)
-    // The matrix from scorer is stuChunks[j][refChunks[i]] -> 10 rows (Y) of 100 cols (X)
+  container.innerHTML = "";
+  // X is Teacher (100 parts), Y is Student (10 parts)
+  // The matrix from scorer is stuChunks[j][refChunks[i]] -> 10 rows (Y) of 100 cols (X)
 
-    for (let j = 0; j < matrix.length; j++) {
-        for (let i = 0; i < matrix[j].length; i++) {
-            const cell = document.createElement("div");
-            cell.className = "matrix-cell";
-            const sim = matrix[j][i];
-            cell.style.setProperty("--sim", sim);
-            // Tooltip or title for inspection
-            cell.title = `T-Chunk ${i + 1}, S-Chunk ${j + 1}: Sim ${sim.toFixed(2)}`;
-            container.appendChild(cell);
-        }
+  for (let j = 0; j < matrix.length; j++) {
+    for (let i = 0; i < matrix[j].length; i++) {
+      const cell = document.createElement("div");
+      cell.className = "matrix-cell";
+      const sim = matrix[j][i];
+      cell.style.setProperty("--sim", sim);
+      // Tooltip or title for inspection
+      cell.title = `T-Chunk ${i + 1}, S-Chunk ${j + 1}: Sim ${sim.toFixed(2)}`;
+      container.appendChild(cell);
     }
+  }
 }
 
 function renderSentenceAttributions(sentences) {
-    const body = document.getElementById("sentence-attribution-body");
-    if (!body) return;
+  const body = document.getElementById("sentence-attribution-body");
+  if (!body) return;
 
-    body.innerHTML = sentences.map(s => {
-        const isPos = s.attribution >= 0;
-        return `
+  body.innerHTML = sentences
+    .map((s) => {
+      const isPos = s.attribution >= 0;
+      return `
             <div style="padding: 0.75rem; border-bottom: 1px solid var(--border-glass); font-size: 0.85rem; display: flex; align-items: flex-start; gap: 10px;">
                 <span style="flex:1;">"${s.text}"</span>
-                <span class="badge" style="margin:0; background:${isPos ? 'rgba(74, 222, 128, 0.1)' : 'rgba(248, 113, 113, 0.1)'}; color:${isPos ? 'var(--accent1)' : 'var(--danger)'}; border-color:${isPos ? 'var(--accent1)' : 'var(--danger)'}; min-width:60px; text-align:center;">
-                    ${s.attribution >= 0 ? '+' : ''}${s.attribution.toFixed(2)}
+                <span class="badge" style="margin:0; background:${isPos ? "rgba(74, 222, 128, 0.1)" : "rgba(248, 113, 113, 0.1)"}; color:${isPos ? "var(--accent1)" : "var(--danger)"}; border-color:${isPos ? "var(--accent1)" : "var(--danger)"}; min-width:60px; text-align:center;">
+                    ${s.attribution >= 0 ? "+" : ""}${s.attribution.toFixed(2)}
                 </span>
             </div>
         `;
-    }).join("");
+    })
+    .join("");
 }
 
 function renderConceptClusters(clusters) {
-    const canvas = document.getElementById("cluster-canvas");
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const w = canvas.width;
-    const h = canvas.height;
+  const canvas = document.getElementById("cluster-canvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width;
+  const h = canvas.height;
 
-    ctx.clearRect(0, 0, w, h);
+  ctx.clearRect(0, 0, w, h);
 
-    // Dynamic placement
-    const nodes = clusters.map((c, i) => ({
-        ...c,
-        x: 50 + Math.random() * (w - 100),
-        y: 50 + Math.random() * (h - 100),
-        r: 15 + (c.similarity * 30)
-    }));
+  // Dynamic placement
+  const nodes = clusters.map((c, i) => ({
+    ...c,
+    x: 50 + Math.random() * (w - 100),
+    y: 50 + Math.random() * (h - 100),
+    r: 15 + c.similarity * 30,
+  }));
 
-    // Draw lines
-    ctx.strokeStyle = "rgba(108, 99, 255, 0.1)";
-    ctx.lineWidth = 1;
-    for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-            const dist = Math.hypot(nodes[i].x - nodes[j].x, nodes[i].y - nodes[j].y);
-            if (dist < 150) {
-                ctx.beginPath();
-                ctx.moveTo(nodes[i].x, nodes[i].y);
-                ctx.lineTo(nodes[j].x, nodes[j].y);
-                ctx.stroke();
-            }
-        }
-    }
-
-    // Draw nodes
-    nodes.forEach(n => {
+  // Draw lines
+  ctx.strokeStyle = "rgba(108, 99, 255, 0.1)";
+  ctx.lineWidth = 1;
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dist = Math.hypot(nodes[i].x - nodes[j].x, nodes[i].y - nodes[j].y);
+      if (dist < 150) {
         ctx.beginPath();
-        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-        ctx.fillStyle = n.covered ? "rgba(74, 222, 128, 0.2)" : "rgba(248, 113, 113, 0.1)";
-        ctx.fill();
-        ctx.strokeStyle = n.covered ? "#4ade80" : "rgba(248, 113, 113, 0.5)";
-        ctx.lineWidth = 2;
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
         ctx.stroke();
+      }
+    }
+  }
 
-        ctx.fillStyle = "#fff";
-        ctx.font = "600 10px Inter";
-        ctx.textAlign = "center";
-        ctx.fillText(n.label.substring(0, 15) + (n.label.length > 15 ? '..' : ''), n.x, n.y + 3);
-    });
+  // Draw nodes
+  nodes.forEach((n) => {
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+    ctx.fillStyle = n.covered
+      ? "rgba(74, 222, 128, 0.2)"
+      : "rgba(248, 113, 113, 0.1)";
+    ctx.fill();
+    ctx.strokeStyle = n.covered ? "#4ade80" : "rgba(248, 113, 113, 0.5)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
 
-    const legend = document.getElementById("cluster-legend");
-    if (legend) {
-        legend.innerHTML = `
+    ctx.fillStyle = "#fff";
+    ctx.font = "600 10px Inter";
+    ctx.textAlign = "center";
+    ctx.fillText(
+      n.label.substring(0, 15) + (n.label.length > 15 ? ".." : ""),
+      n.x,
+      n.y + 3,
+    );
+  });
+
+  const legend = document.getElementById("cluster-legend");
+  if (legend) {
+    legend.innerHTML = `
             <div style="display:flex; align-items:center; gap:8px;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#4ade80;"></span> Covered Component</div>
             <div style="display:flex; align-items:center; gap:8px;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; border:2px solid rgba(248, 113, 113, 0.5);"></span> Missed Component</div>
         `;
-    }
+  }
 }
 
 // ─────────────────────────────────────────
@@ -238,60 +287,75 @@ function renderConceptClusters(clusters) {
 // Single Ans Form
 const demoForm = document.getElementById("demo-form");
 if (demoForm) {
-    demoForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const ref = document.getElementById("ref-answer").value.trim();
-        const stu = document.getElementById("stu-answer").value.trim();
-        const max = parseFloat(document.getElementById("max-score").value) || 10;
+  demoForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const ref = document.getElementById("ref-answer").value.trim();
+    const stu = document.getElementById("stu-answer").value.trim();
+    const max = parseFloat(document.getElementById("max-score").value) || 10;
 
-        if (!ref || !stu) {
-            showToast("Please provide both answers.", "error");
-            return;
-        }
+    if (!ref || !stu) {
+      showPopup(
+        "Input Missing",
+        "Please provide both reference answer and student answer.",
+        "error",
+      );
+      return;
+    }
 
-        try {
-            const res = gradeAnswer(ref, stu, max);
+    try {
+      const res = gradeAnswer(ref, stu, max);
 
-            // Show result panels
-            document.getElementById("results-placeholder").classList.add("hidden");
-            document.getElementById("results-content").classList.remove("hidden");
-            document.getElementById("xai-content").classList.remove("hidden");
+      // Show result panels
+      document.getElementById("results-placeholder").classList.add("hidden");
+      document.getElementById("results-content").classList.remove("hidden");
+      document.getElementById("xai-content").classList.remove("hidden");
 
-            // Render stats
-            renderScore(res.scoreObj, max);
-            renderExplanation(res.explanation);
-            renderShap(res.shap, max);
-            renderDriftMatrix(res.matrix);
-            renderSentenceAttributions(res.sentences);
-            renderConceptClusters(res.clusters);
+      // Render stats
+      renderScore(res.scoreObj, max);
+      renderExplanation(res.explanation);
+      renderShap(res.shap, max);
+      renderDriftMatrix(res.matrix);
+      renderSentenceAttributions(res.sentences);
+      renderConceptClusters(res.clusters);
 
-            showToast("Grading complete!");
-        } catch (err) {
-            showToast("Error during grading: " + err.message, "error");
-            console.error(err);
-        }
-    });
+      const driftPct = Math.round((1 - res.drift.drift_score) * 100);
+      showPopup(
+        "Grading Complete",
+        `Score: ${res.scoreObj.final.toFixed(2)}/${max} | Topic Alignment: ${driftPct}%`,
+        "success",
+      );
+    } catch (err) {
+      showPopup(
+        "Grading Error",
+        err.message || "An error occurred during grading.",
+        "error",
+      );
+      console.error(err);
+    }
+  });
 }
 
 // Sample Buttons
 const btnS1 = document.getElementById("try-sample");
 if (btnS1) {
-    btnS1.addEventListener("click", () => {
-        document.getElementById("ref-answer").value = SAMPLES.case1.ref;
-        document.getElementById("stu-answer").value = SAMPLES.case1.stu;
-        document.getElementById("max-score").value = SAMPLES.case1.max;
-        demoForm.dispatchEvent(new Event('submit'));
-    });
+  btnS1.addEventListener("click", () => {
+    document.getElementById("ref-answer").value = SAMPLES.case1.ref;
+    document.getElementById("stu-answer").value = SAMPLES.case1.stu;
+    document.getElementById("max-score").value = SAMPLES.case1.max;
+    showToast("Sample 1 loaded - 1:1 similarity case");
+    demoForm.dispatchEvent(new Event("submit"));
+  });
 }
 
 const btnS2 = document.getElementById("try-sample-2");
 if (btnS2) {
-    btnS2.addEventListener("click", () => {
-        document.getElementById("ref-answer").value = SAMPLES.case2.ref;
-        document.getElementById("stu-answer").value = SAMPLES.case2.stu;
-        document.getElementById("max-score").value = SAMPLES.case2.max;
-        demoForm.dispatchEvent(new Event('submit'));
-    });
+  btnS2.addEventListener("click", () => {
+    document.getElementById("ref-answer").value = SAMPLES.case2.ref;
+    document.getElementById("stu-answer").value = SAMPLES.case2.stu;
+    document.getElementById("max-score").value = SAMPLES.case2.max;
+    showToast("Sample 2 loaded - Summary vs Script case");
+    demoForm.dispatchEvent(new Event("submit"));
+  });
 }
 
 // ─────────────────────────────────────────
@@ -303,62 +367,206 @@ const uploadZone = document.getElementById("upload-zone");
 const batchInput = document.getElementById("batch-file-input");
 
 if (uploadZone && batchInput) {
-    uploadZone.addEventListener("click", () => batchInput.click());
-    batchInput.addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (file) handleCsvUpload(file);
-    });
+  uploadZone.addEventListener("click", () => batchInput.click());
+  batchInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) handleCsvUpload(file);
+  });
+}
+
+/**
+ * Detect column name by matching variations
+ * Handles: email, Email, email_address, Email Address, emailAddress, etc.
+ */
+function detectColumn(headers, patterns) {
+  for (const pattern of patterns) {
+    const found = headers.find(
+      (h) =>
+        h.toLowerCase().replace(/[\s_-]/g, "") ===
+        pattern.toLowerCase().replace(/[\s_-]/g, ""),
+    );
+    if (found) return found;
+  }
+  return null;
 }
 
 function handleCsvUpload(file) {
-    if (!checkLibrary("Papa")) return;
-    showToast(`Processing ${file.name}...`);
+  if (!checkLibrary("Papa")) {
+    showPopup("Library Missing", "Papa Parse library not loaded.", "error");
+    return;
+  }
 
-    Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-            const data = results.data;
-            const headers = results.meta.fields;
+  const fileName = file.name;
+  showToast(`Processing ${fileName}...`);
 
-            // Auto-detect columns
-            const colRef = headers.find(h => /ref|desired|model/i.test(h)) || headers[1];
-            const colStu = headers.find(h => /student|stu|response/i.test(h)) || headers[2];
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: (results) => {
+      const data = results.data;
+      const headers = results.meta.fields;
 
-            const scored = data.map(row => {
-                const res = gradeAnswer(row[colRef] || "", row[colStu] || "", 5);
-                return {
-                    ...row,
-                    PredictedScore: res.scoreObj.final.toFixed(2),
-                    Confidence: (res.features.feat_avg_semantic * 100).toFixed(0) + "%"
-                };
+      // Auto-detect columns with flexible matching
+      const colRef =
+        detectColumn(headers, [
+          "reference",
+          "ref",
+          "desired",
+          "model",
+          "answer",
+          "teacher",
+          "expected",
+        ]) || headers[1];
+      const colStu =
+        detectColumn(headers, [
+          "student",
+          "stu",
+          "response",
+          "answer",
+          "summary",
+          "submission",
+        ]) || headers[2];
+      const colName =
+        detectColumn(headers, [
+          "name",
+          "student",
+          "studentname",
+          "studentname",
+          "fullname",
+        ]) || "Name";
+      const colEmail =
+        detectColumn(headers, ["email", "emailaddress", "e-mail"]) || "Email";
+      const colRoll =
+        detectColumn(headers, [
+          "roll",
+          "rollnumber",
+          "studentid",
+          "id",
+          "reg",
+        ]) || "Roll";
+
+      if (!colRef || !colStu) {
+        showPopup(
+          "Column Detection Failed",
+          `Could not find reference and student answer columns. Found: ${headers.join(", ")}`,
+          "error",
+        );
+        return;
+      }
+
+      // Create progress container
+      const progressHtml = `
+      <div id="batch-progress-container" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:9998;">
+          <div style="background:var(--bg-secondary); border-radius:12px; padding:2rem; width:90%; max-width:500px; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+              <h3 style="margin:0 0 1rem 0; color:var(--text-primary);">⏳ Processing Batch...</h3>
+              <div style="background:rgba(255,255,255,0.05); border-radius:8px; padding:0.5rem; height:24px; margin-bottom:1rem; overflow:hidden;">
+                  <div id="batch-progress-bar" style="background:linear-gradient(90deg, var(--accent1), var(--accent2)); height:100%; width:0%; border-radius:6px; transition:width 0.3s ease;"></div>
+              </div>
+              <p id="batch-progress-text" style="margin:0; color:var(--text-dim); text-align:center; font-size:0.9rem;">0 / ${data.length} students processed</p>
+          </div>
+      </div>
+      `;
+      document.body.insertAdjacentHTML("beforeend", progressHtml);
+
+      // Process with progress updates
+      const scored = [];
+      data.forEach((row, idx) => {
+        try {
+          const ref = row[colRef] || "";
+          const stu = row[colStu] || "";
+
+          if (ref && stu) {
+            const res = gradeAnswer(ref, stu, 10);
+            const driftPct = Math.round((1 - res.drift.drift_score) * 100);
+
+            scored.push({
+              Name: row[colName] || "Unknown",
+              Email: row[colEmail] || "N/A",
+              Roll: row[colRoll] || "N/A",
+              Score: res.scoreObj.final.toFixed(2),
+              "Topic Alignment": driftPct + "%",
+              "Concept Coverage":
+                Math.round(res.drift.concept_coverage * 100) + "%",
             });
-
-            renderBatchResults(scored);
+          }
+        } catch (e) {
+          console.error(`Error processing row ${idx}:`, e);
         }
-    });
+
+        // Update progress
+        const progress = Math.round(((idx + 1) / data.length) * 100);
+        const progressBar = document.getElementById("batch-progress-bar");
+        const progressText = document.getElementById("batch-progress-text");
+        if (progressBar) progressBar.style.width = progress + "%";
+        if (progressText)
+          progressText.textContent = `${idx + 1} / ${data.length} students processed`;
+      });
+
+      // Remove progress overlay
+      const progressContainer = document.getElementById(
+        "batch-progress-container",
+      );
+      if (progressContainer) progressContainer.remove();
+
+      if (scored.length === 0) {
+        showPopup(
+          "No Results",
+          "No valid data rows could be processed.",
+          "warning",
+        );
+        return;
+      }
+
+      renderBatchResults(scored, fileName);
+      showPopup(
+        "Batch Processing Complete",
+        `Successfully graded ${scored.length} students from ${fileName}`,
+        "success",
+      );
+    },
+    error: (error) => {
+      showPopup(
+        "File Parse Error",
+        error.message || "Failed to parse CSV file.",
+        "error",
+      );
+    },
+  });
 }
 
-function renderBatchResults(data) {
-    const wrap = document.getElementById("batch-table-wrap");
-    const resultsSec = document.getElementById("batch-results");
-    if (!wrap) return;
+function renderBatchResults(data, fileName = "results") {
+  const wrap = document.getElementById("batch-table-wrap");
+  const resultsSec = document.getElementById("batch-results");
+  if (!wrap) return;
 
-    resultsSec.classList.remove("hidden");
+  resultsSec.classList.remove("hidden");
 
-    let html = `<table style="width:100%; border-collapse:collapse; font-size:0.85rem;"><thead><tr style="background:rgba(255,255,255,0.05);">`;
-    Object.keys(data[0]).forEach(k => html += `<th style="padding:1rem; text-align:left; border-bottom:1px solid var(--border-glass);">${k}</th>`);
-    html += `</tr></thead><tbody>`;
+  // Add filename header
+  let html = `<div style="margin-bottom:1.5rem; padding-bottom:1rem; border-bottom:1px solid var(--border-glass);">
+    <p style="margin:0 0 0.5rem 0; color:var(--text-dim); font-size:0.85rem;">📁 File: <strong>${fileName}</strong></p>
+    <p style="margin:0; color:var(--text-muted); font-size:0.8rem;">Total Records: <strong>${data.length}</strong></p>
+  </div>`;
 
-    data.forEach(row => {
-        html += `<tr style="border-bottom:1px solid var(--border-glass);">`;
-        Object.values(row).forEach(v => html += `<td style="padding:1rem;">${v}</td>`);
-        html += `</tr>`;
-    });
-    html += `</tbody></table>`;
+  html += `<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; font-size:0.85rem;"><thead><tr style="background:rgba(255,255,255,0.05);">`;
+  Object.keys(data[0]).forEach(
+    (k) =>
+      (html += `<th style="padding:1rem; text-align:left; border-bottom:2px solid var(--border-glass); font-weight:600;">${k}</th>`),
+  );
+  html += `</tr></thead><tbody>`;
 
-    wrap.innerHTML = html;
-    showToast("Batch results loaded!");
+  data.forEach((row, idx) => {
+    html += `<tr style="border-bottom:1px solid var(--border-glass); ${
+      idx % 2 === 0 ? "background:rgba(255,255,255,0.02);" : ""
+    }">`;
+    Object.values(row).forEach(
+      (v) => (html += `<td style="padding:1rem;">${v}</td>`),
+    );
+    html += `</tr>`;
+  });
+  html += `</tbody></table></div>`;
+
+  wrap.innerHTML = html;
+  showToast(`✅ Results loaded: ${data.length} records from ${fileName}`);
 }
 
 // Script Eval (Docx + Xlsx)
@@ -368,61 +576,169 @@ const xlsxInput = document.getElementById("summary-file-input");
 
 let teacherTranscript = "";
 let studentData = [];
+let docxFileName = "";
+let xlsxFileName = "";
 
 if (docxInput) {
-    document.getElementById("script-upload-zone").addEventListener("click", () => docxInput.click());
-    docxInput.addEventListener("change", async (e) => {
-        const file = e.target.files[0];
-        if (file && checkLibrary("mammoth")) {
-            const arrayBuffer = await file.arrayBuffer();
-            const result = await mammoth.extractRawText({ arrayBuffer });
-            teacherTranscript = result.value;
-            showToast("Teacher transcript refined.");
-            checkEvalReady();
-        }
-    });
+  document
+    .getElementById("script-upload-zone")
+    .addEventListener("click", () => docxInput.click());
+  docxInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (file && checkLibrary("mammoth")) {
+      docxFileName = file.name;
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      teacherTranscript = result.value;
+      showPopup(
+        "Script Loaded",
+        `✅ Teacher transcript loaded from ${docxFileName}`,
+        "success",
+      );
+      checkEvalReady();
+    } else if (file && !checkLibrary("mammoth")) {
+      showPopup(
+        "Library Missing",
+        "Mammoth library not loaded for DOCX processing.",
+        "error",
+      );
+    }
+  });
 }
 
 if (xlsxInput) {
-    document.getElementById("summary-upload-zone").addEventListener("click", () => xlsxInput.click());
-    xlsxInput.addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (file && checkLibrary("XLSX")) {
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                const bstr = evt.target.result;
-                const wb = XLSX.read(bstr, { type: 'binary' });
-                const wsname = wb.SheetNames[0];
-                const ws = wb.Sheets[wsname];
-                studentData = XLSX.utils.sheet_to_json(ws);
-                showToast(`Loaded ${studentData.length} students.`);
-                checkEvalReady();
-            };
-            reader.readAsBinaryString(file);
-        }
-    });
+  document
+    .getElementById("summary-upload-zone")
+    .addEventListener("click", () => xlsxInput.click());
+  xlsxInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file && checkLibrary("XLSX")) {
+      xlsxFileName = file.name;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const bstr = evt.target.result;
+        const wb = XLSX.read(bstr, { type: "binary" });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        studentData = XLSX.utils.sheet_to_json(ws);
+        showPopup(
+          "Student Data Loaded",
+          `✅ Loaded ${studentData.length} students from ${xlsxFileName}`,
+          "success",
+        );
+        checkEvalReady();
+      };
+      reader.readAsBinaryString(file);
+    } else if (file && !checkLibrary("XLSX")) {
+      showPopup(
+        "Library Missing",
+        "XLSX library not loaded for Excel processing.",
+        "error",
+      );
+    }
+  });
 }
 
 function checkEvalReady() {
-    if (teacherTranscript && studentData.length > 0) {
-        scriptBtn.disabled = false;
-        scriptBtn.classList.add("pulse");
-    }
+  if (teacherTranscript && studentData.length > 0) {
+    scriptBtn.disabled = false;
+    scriptBtn.classList.add("pulse");
+  }
 }
 
 if (scriptBtn) {
-    scriptBtn.addEventListener("click", () => {
-        showToast("Running full class evaluation...");
-        const results = studentData.map(s => {
-            const summaryCol = Object.keys(s).find(k => /summary|answer|response/i.test(k)) || "summary";
-            const res = gradeAnswer(teacherTranscript, s[summaryCol] || "", 10);
-            return {
-                Name: s.name || s.student || "Unknown",
-                Email: s.emailAddress || s.email || "N/A",
-                Score: res.scoreObj.final.toFixed(2),
-                Drift: (res.drift.drift_score * 100).toFixed(0) + "%"
-            };
+  scriptBtn.addEventListener("click", () => {
+    if (!teacherTranscript || studentData.length === 0) {
+      showPopup(
+        "Missing Data",
+        "Please upload both teacher script and student data.",
+        "error",
+      );
+      return;
+    }
+
+    // Create progress overlay
+    const progressHtml = `
+    <div id="eval-progress-container" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:9998;">
+        <div style="background:var(--bg-secondary); border-radius:12px; padding:2rem; width:90%; max-width:500px; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <h3 style="margin:0 0 1rem 0; color:var(--text-primary);">⏳ Evaluating Class...</h3>
+            <div style="background:rgba(255,255,255,0.05); border-radius:8px; padding:0.5rem; height:24px; margin-bottom:1rem; overflow:hidden;">
+                <div id="eval-progress-bar" style="background:linear-gradient(90deg, var(--accent1), var(--accent2)); height:100%; width:0%; border-radius:6px; transition:width 0.3s ease;"></div>
+            </div>
+            <p id="eval-progress-text" style="margin:0; color:var(--text-dim); text-align:center; font-size:0.9rem;">0 / ${studentData.length} evaluated</p>
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML("beforeend", progressHtml);
+
+    const results = [];
+    studentData.forEach((s, idx) => {
+      try {
+        // Flexible column detection for student answers
+        const summaryCol =
+          Object.keys(s).find((k) =>
+            /summary|answer|response|essay/i.test(k),
+          ) || Object.keys(s)[Object.keys(s).length - 1];
+
+        const nameCol =
+          Object.keys(s).find((k) => /name|student|fullname/i.test(k)) ||
+          "name";
+        const emailCol =
+          Object.keys(s).find((k) => /email|emailaddress|e-mail/i.test(k)) ||
+          "email";
+        const rollCol =
+          Object.keys(s).find((k) => /roll|rollnumber|studentid|id/i.test(k)) ||
+          "roll";
+
+        const res = gradeAnswer(teacherTranscript, s[summaryCol] || "", 10);
+        const alignmentPct = Math.round((1 - res.drift.drift_score) * 100);
+
+        results.push({
+          Name: s[nameCol] || "Unknown",
+          Email: s[emailCol] || "N/A",
+          Roll: s[rollCol] || "N/A",
+          Score: res.scoreObj.final.toFixed(2),
+          "Topic Alignment": alignmentPct + "%",
+          "Concept Coverage":
+            Math.round(res.drift.concept_coverage * 100) + "%",
         });
-        renderBatchResults(results);
+      } catch (e) {
+        console.error(`Error evaluating student ${idx}:`, e);
+        results.push({
+          Name: s.name || "Unknown",
+          Email: s.email || "N/A",
+          Roll: s.roll || "N/A",
+          Score: "ERROR",
+          "Topic Alignment": "N/A",
+          "Concept Coverage": "N/A",
+        });
+      }
+
+      // Update progress
+      const progress = Math.round(((idx + 1) / studentData.length) * 100);
+      const progressBar = document.getElementById("eval-progress-bar");
+      const progressText = document.getElementById("eval-progress-text");
+      if (progressBar) progressBar.style.width = progress + "%";
+      if (progressText)
+        progressText.textContent = `${idx + 1} / ${studentData.length} evaluated`;
     });
+
+    // Remove progress overlay
+    const progressContainer = document.getElementById(
+      "eval-progress-container",
+    );
+    if (progressContainer) progressContainer.remove();
+
+    if (results.length === 0) {
+      showPopup("Processing Error", "No students could be evaluated.", "error");
+      return;
+    }
+
+    renderBatchResults(results, xlsxFileName);
+    showPopup(
+      "Class Evaluation Complete",
+      `Successfully evaluated ${results.length} students from ${xlsxFileName}`,
+      "success",
+    );
+  });
 }
