@@ -12,6 +12,17 @@ ExplainGrade is an Automated Short Answer Grading (ASAG) system that scores stud
 
 It was trained on the **Mohler Short Answer Grading Dataset** (2,200+ student responses to computer science exam questions graded 0–5 by human annotators).
 
+### 🆕 New: Temporal Semantic Drift Analysis
+
+Track how student understanding evolves over multiple submissions! Submit different answer attempts and the system will automatically:
+
+- 📈 Measure **improvement score** (-1 to +1 scale)
+- ⚡ Calculate **consistency score** (0-1)
+- 🎯 Detect **learning trend** (improving, degrading, stable)
+- 🌊 Quantify **volatility** (unpredictability)
+
+**Try it:** In the Live Demo, grade an answer, modify it, and grade again. The temporal analysis will appear automatically!
+
 ---
 
 ## Two Ways to Use
@@ -20,11 +31,12 @@ It was trained on the **Mohler Short Answer Grading Dataset** (2,200+ student re
 
 **Everything runs in your browser. No data is sent to any server.**
 
-| Feature                   | How to use                                                                                                                                                       |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Single Answer Grading** | Go to the [Live Demo](https://manikeshmk.github.io/Explainable_Summary_Score/#demo) → paste reference answer + student answer → click _Compute Score_            |
-| **Batch CSV Grading**     | Go to [Batch Grade](https://manikeshmk.github.io/Explainable_Summary_Score/#batch) → upload a `.csv` with columns `question`, `desired_answer`, `student_answer` |
-| **Class Evaluation**      | Go to [Script Eval](https://manikeshmk.github.io/Explainable_Summary_Score/#script-eval) → upload a Google Meet transcript `.docx` + student summaries `.xlsx`   |
+| Feature                      | How to use                                                                                                                                                       |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Single Answer Grading**    | Go to the [Live Demo](https://manikeshmk.github.io/Explainable_Summary_Score/#demo) → paste reference answer + student answer → click _Compute Score_            |
+| **Batch CSV Grading**        | Go to [Batch Grade](https://manikeshmk.github.io/Explainable_Summary_Score/#batch) → upload a `.csv` with columns `question`, `desired_answer`, `student_answer` |
+| **Class Evaluation**         | Go to [Script Eval](https://manikeshmk.github.io/Explainable_Summary_Score/#script-eval) → upload a Google Meet transcript `.docx` + student summaries `.xlsx`   |
+| **📈 Learning Trajectories** | Submit multiple answer attempts and view temporal drift metrics showing learning progress                                                                        |
 
 > ⚠ **Limitation:** The browser uses TF-cosine similarity as a proxy for semantic similarity. For higher accuracy, use the local runner below.
 
@@ -113,12 +125,13 @@ email, name, final, stage1, stage2, semantic, jaccard, note
 │   ├── index.html         # Main UI page
 │   ├── style.css          # Design system & styles
 │   ├── scorer.js          # In-browser ASAG engine
-│   └── app.js             # UI controller
+│   └── app.js             # UI controller + temporal drift analysis
 ├── src/                   # Python ML pipeline (model training)
 │   ├── anchor_extraction.py
 │   ├── semantic_mapping.py
-│   └── model_training.py
-├── local_grader.py        # ← Local CLI grader (new)
+│   ├── model_training.py
+│   └── semantic_drift_temporal.py  # ← Temporal drift research implementation
+├── local_grader.py        # ← Local CLI grader
 ├── requirements.txt       # ← Python dependencies for local runner
 ├── mohler_dataset_edited.csv
 └── README.md
@@ -154,6 +167,15 @@ The website auto-detects flexible column names: `desired_answer` / `reference_an
 ---
 
 ## References
+
+**Temporal Semantic Drift Analysis (Core Innovation)**
+
+- Kulkarni et al. (2015). _Statistically Significant Detection of Linguistic Change._ Foundation for temporal drift tracking.
+- Hamilton et al. (2016). _Cultural shift or linguistic drift? Comparing computational measures of semantic change._ Core methodology for embedding-based drift measurement.
+- Bamler & Mandt (2017). _Dynamic Word Embeddings._ Framework for tracking semantic evolution over time sequences.
+- Gama et al. (2014). _A Survey on Concept Drift Adaptation._ Classification of drift detection techniques applied to educational contexts.
+
+**Automated Short Answer Grading**
 
 - Ahmad Ayaan & Kok-Why Ng (2024). _Automated grading using natural language processing and semantic analysis._ PMC12171532.
 - Filighera et al. (2023). _Our System for Short Answer Grading using Generative Models._ BEA Workshop, ACL 2023.

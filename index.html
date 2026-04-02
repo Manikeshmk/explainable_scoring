@@ -53,14 +53,16 @@
       <div class="container hero-grid">
         <div class="hero-content">
           <span class="eyebrow">Explainable AI · Assessment Intelligence</span>
-          <h1 class="hero-title">
-            Explainable short-answer scoring
-          </h1>
+          <h1 class="hero-title">Explainable short-answer scoring</h1>
           <p class="hero-subtitle">
-            Run the dual-stage pipeline that powers this project: lexical alignment, semantic reranking, and rich evidence surfaces for every teacher + student pair.
+            Run the dual-stage pipeline that powers this project: lexical
+            alignment, semantic reranking, and rich evidence surfaces for every
+            teacher + student pair.
           </p>
           <div class="hero-actions">
-            <a href="#demo" class="btn btn-primary hero-cta">Launch Live Demo</a>
+            <a href="#demo" class="btn btn-primary hero-cta"
+              >Launch Live Demo</a
+            >
             <a href="#batch" class="btn btn-link">Review Batch Runner</a>
           </div>
           <div class="hero-metrics">
@@ -86,14 +88,20 @@
                 <span class="step-badge">Stage I</span>
                 <div>
                   <strong>Lexical alignment</strong>
-                  <p>Anchor extraction, edit distance, and semantic overlap establish a safe floor before reranking.</p>
+                  <p>
+                    Anchor extraction, edit distance, and semantic overlap
+                    establish a safe floor before reranking.
+                  </p>
                 </div>
               </div>
               <div class="pipeline-step">
                 <span class="step-badge">Stage II</span>
                 <div>
                   <strong>Semantic reranking</strong>
-                  <p>Concept clustering + drift scoring highlight where the student summary diverges.</p>
+                  <p>
+                    Concept clustering + drift scoring highlight where the
+                    student summary diverges.
+                  </p>
                 </div>
               </div>
             </div>
@@ -104,8 +112,12 @@
               <li>Predicted grade with verdict narrative</li>
               <li>SHAP bars, sentence attributions, anchor coverage</li>
               <li>Semantic drift matrix, concept map, batch exports</li>
+              <li>📈 Temporal learning analysis (multi-submission tracking)</li>
             </ul>
-            <p class="panel-note">Everything renders in-browser using <code>scorer.js</code> and the explainability modules.</p>
+            <p class="panel-note">
+              Everything renders in-browser using <code>scorer.js</code>,
+              explainability modules, and temporal drift research.
+            </p>
           </div>
         </div>
       </div>
@@ -120,7 +132,21 @@
               <p class="eyebrow">Live evaluation workspace</p>
               <h2>✍️ Live Scoring Demo</h2>
               <p class="section-subtitle">
-                Paste a teacher reference and a student response. We will run the dual-stage pipeline and surface explainability artifacts instantly.
+                Paste a teacher reference and a student response. We will run
+                the dual-stage pipeline and surface explainability artifacts
+                instantly.
+                <span
+                  style="
+                    display: block;
+                    margin-top: 0.75rem;
+                    font-size: 0.95rem;
+                    color: var(--text-dim);
+                  "
+                >
+                  💡 <strong>Temporal Analysis:</strong> Submit multiple answers
+                  to see learning trajectory, improvement scores, and
+                  consistency metrics.
+                </span>
               </p>
             </div>
             <div class="heading-actions">
@@ -253,7 +279,8 @@
                   ></canvas>
                   <div id="waterfall-legend" class="waterfall-legend"></div>
                   <p class="viz-footnote">
-                    This chart stacks each feature contribution to show how the final score is built.
+                    This chart stacks each feature contribution to show how the
+                    final score is built.
                   </p>
                 </div>
               </div>
@@ -268,7 +295,8 @@
                 <div class="viz-body">
                   <div id="metric-comparison" class="dual-bar-grid"></div>
                   <p class="viz-footnote">
-                    Each bar shows how strongly the student response covers that metric.
+                    Each bar shows how strongly the student response covers that
+                    metric.
                   </p>
                 </div>
               </div>
@@ -276,7 +304,9 @@
               <div class="viz-card glass-card xai-card">
                 <div class="viz-header">
                   <h3 class="viz-title">📐 Feature Balance Radar</h3>
-                  <span class="badge" style="margin-bottom: 0">5-D Metrics</span>
+                  <span class="badge" style="margin-bottom: 0"
+                    >5-D Metrics</span
+                  >
                 </div>
                 <div class="viz-body">
                   <canvas
@@ -286,7 +316,8 @@
                     height="300"
                   ></canvas>
                   <p class="viz-footnote">
-                    Normalized snapshot of semantic, lexical, and coverage signals.
+                    Normalized snapshot of semantic, lexical, and coverage
+                    signals.
                   </p>
                 </div>
               </div>
@@ -319,7 +350,10 @@
                 </div>
               </div>
 
-              <div class="viz-card glass-card xai-card span-2" id="drift-timeline-card">
+              <div
+                class="viz-card glass-card xai-card span-2"
+                id="drift-timeline-card"
+              >
                 <div class="viz-header">
                   <h3 class="viz-title">📍 Semantic Drift Timeline</h3>
                   <span class="badge" style="margin-bottom: 0"
@@ -334,7 +368,10 @@
                       width="640"
                       height="200"
                     ></canvas>
-                    <div id="drift-timeline-empty" class="timeline-empty hidden">
+                    <div
+                      id="drift-timeline-empty"
+                      class="timeline-empty hidden"
+                    >
                       Need more overlapping anchors to trace drift.
                     </div>
                     <div id="drift-timeline-meta" class="timeline-meta"></div>
@@ -372,7 +409,8 @@
             <p class="eyebrow">Bulk evaluation</p>
             <h2>🚀 File Grade Runner</h2>
             <p class="section-subtitle">
-              Automate grading for an entire cohort with CSV or pair long transcripts with multi-student summaries via our XLSX workflow.
+              Automate grading for an entire cohort with CSV or pair long
+              transcripts with multi-student summaries via our XLSX workflow.
             </p>
           </div>
         </div>

@@ -125,10 +125,7 @@ function prepareCanvas(canvas, fallbackWidth = 320, fallbackHeight = 220) {
 }
 
 function escapeHtml(str = "") {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 // ─────────────────────────────────────────
@@ -229,7 +226,11 @@ function renderWaterfall(scoreObj, shap) {
   };
 
   const items = Object.entries(shap)
-    .map(([key, value]) => ({ key, label: labels[key] || key, value: Number(value) || 0 }))
+    .map(([key, value]) => ({
+      key,
+      label: labels[key] || key,
+      value: Number(value) || 0,
+    }))
     .sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
 
   const total = items.reduce((sum, item) => sum + item.value, 0);
@@ -238,7 +239,11 @@ function renderWaterfall(scoreObj, shap) {
   const chartHeight = height - margin.top - margin.bottom;
   const barGap = 14;
   const barWidth = (chartWidth - barGap * (items.length - 1)) / items.length;
-  const maxAbs = Math.max(...items.map((item) => Math.abs(item.value)), Math.abs(total), 1);
+  const maxAbs = Math.max(
+    ...items.map((item) => Math.abs(item.value)),
+    Math.abs(total),
+    1,
+  );
   const zeroY = margin.top + chartHeight * 0.72;
   const scale = (chartHeight * 0.55) / maxAbs;
   const baseline = Math.max(0, scoreObj.final - total);
@@ -264,7 +269,11 @@ function renderWaterfall(scoreObj, shap) {
 
   ctx.fillStyle = mutedColor;
   ctx.fillText("Contribution path", width / 2, 18);
-  ctx.fillText(`Final score: ${scoreObj.final.toFixed(2)}`, width - margin.right - 70, margin.top - 8);
+  ctx.fillText(
+    `Final score: ${scoreObj.final.toFixed(2)}`,
+    width - margin.right - 70,
+    margin.top - 8,
+  );
 
   items.forEach((item, index) => {
     const x = margin.left + index * (barWidth + barGap);
@@ -291,7 +300,11 @@ function renderWaterfall(scoreObj, shap) {
 
     ctx.fillStyle = mutedColor;
     ctx.font = "11px var(--font-sans)";
-    ctx.fillText(`${item.value >= 0 ? "+" : ""}${item.value.toFixed(2)}`, x + barWidth / 2, top - 8);
+    ctx.fillText(
+      `${item.value >= 0 ? "+" : ""}${item.value.toFixed(2)}`,
+      x + barWidth / 2,
+      top - 8,
+    );
 
     running = endValue;
   });
@@ -300,7 +313,11 @@ function renderWaterfall(scoreObj, shap) {
   ctx.fillStyle = textColor;
   ctx.font = "700 13px var(--font-sans)";
   ctx.fillText(`Start ${baseline.toFixed(2)}`, margin.left + 30, zeroY + 26);
-  ctx.fillText(`End ${scoreObj.final.toFixed(2)}`, width - margin.right - 30, zeroY + 26);
+  ctx.fillText(
+    `End ${scoreObj.final.toFixed(2)}`,
+    width - margin.right - 30,
+    zeroY + 26,
+  );
 
   if (legend) {
     legend.innerHTML = `
@@ -495,7 +512,9 @@ function renderDriftMatrix(matrixData) {
           <div class="drift-row-cells" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr));">
             ${row
               .map((value, colIndex) => {
-                const safe = Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0;
+                const safe = Number.isFinite(value)
+                  ? Math.max(0, Math.min(1, value))
+                  : 0;
                 const drift = 1 - safe;
                 const hue = Math.round(212 - safe * 140);
                 return `
@@ -677,7 +696,8 @@ function renderSentenceHeatmap(sentences) {
     .map((sentence) => {
       const isPos = sentence.attribution >= 0;
       const intensity = (
-        0.2 + 0.6 * (Math.abs(sentence.attribution) / maxAbs)
+        0.2 +
+        0.6 * (Math.abs(sentence.attribution) / maxAbs)
       ).toFixed(2);
       const safeText = escapeHtml(sentence.text || "");
       return `
@@ -753,6 +773,220 @@ function renderConceptClusters(clusters) {
   }
 }
 
+function renderTemporalDriftAnalysis(metrics) {
+  // Create or get temporal analysis card
+  let card = document.getElementById("temporal-drift-card");
+  if (!card) {
+    const xaiContent = document.getElementById("xai-content");
+    if (!xaiContent) return;
+
+    const cardHTML = `
+      <div class="viz-card glass-card xai-card span-2" id="temporal-drift-card">
+        <div class="viz-header">
+          <h3 class="viz-title">📈 Temporal Learning Analysis</h3>
+          <span class="badge" style="margin-bottom: 0">Multi-submission tracking</span>
+        </div>
+        <div class="viz-body">
+          <div id="temporal-content" style="display: flex; flex-direction: column; gap: 2rem; width: 100%;">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; width: 100%; justify-items: center;">
+              <div id="temporal-metrics" style="display: contents;"></div>
+            </div>
+            <div style="width: 100%; display: flex; justify-content: center;">
+              <canvas id="temporal-chart" width="900" height="400" style="max-width: 100%; border: 1px solid var(--border-glass); border-radius: var(--radius-md);"></canvas>
+            </div>
+          </div>
+          <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-glass);">
+            <button onclick="TemporalDriftTracker.clearSubmissions(); location.reload();" 
+                    style="padding: 0.5rem 1rem; background: rgba(248, 113, 113, 0.1); color: var(--danger); border: 1px solid var(--danger); border-radius: var(--radius-sm); cursor: pointer; font-size: 0.85rem;">
+              🗑️ Clear Submission History
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    xaiContent.insertAdjacentHTML("beforeend", cardHTML);
+    card = document.getElementById("temporal-drift-card");
+  }
+
+  // Fill in metrics
+  const metricsDiv = document.getElementById("temporal-metrics");
+  metricsDiv.innerHTML = `
+    <div style="padding: 0.75rem; background: rgba(255, 255, 255, 0.03); border-radius: var(--radius-sm); border: 1px solid var(--border-glass);">
+      <span style="font-size: 0.8rem; color: var(--text-dim);">Submissions</span>
+      <div style="font-size: 1.4rem; font-weight: 600; color: var(--primary);">${metrics.submissionCount}</div>
+    </div>
+    <div style="padding: 0.75rem; background: rgba(255, 255, 255, 0.03); border-radius: var(--radius-sm); border: 1px solid var(--border-glass);">
+      <span style="font-size: 0.8rem; color: var(--text-dim);">Improvement</span>
+      <div style="font-size: 1.4rem; font-weight: 600; color: ${parseFloat(metrics.improvementScore) > 0 ? "var(--accent1)" : "var(--danger)"};">${metrics.improvementScore > 0 ? "+" : ""}${metrics.improvementScore}</div>
+    </div>
+    <div style="padding: 0.75rem; background: rgba(255, 255, 255, 0.03); border-radius: var(--radius-sm); border: 1px solid var(--border-glass);">
+      <span style="font-size: 0.8rem; color: var(--text-dim);">Consistency</span>
+      <div style="font-size: 1.4rem; font-weight: 600; color: var(--primary);">${(parseFloat(metrics.consistencyScore) * 100).toFixed(0)}%</div>
+    </div>
+    <div style="padding: 0.75rem; background: rgba(255, 255, 255, 0.03); border-radius: var(--radius-sm); border: 1px solid var(--border-glass);">
+      <span style="font-size: 0.8rem; color: var(--text-dim);">Learning Trend</span>
+      <div style="font-size: 1.2rem; font-weight: 600;">
+        ${metrics.driftTrend === "improving" ? "📈 Improving" : metrics.driftTrend === "degrading" ? "📉 Degrading" : "➡️ Stable"}
+      </div>
+    </div>
+  `;
+
+  // Draw trajectory chart
+  const canvas = document.getElementById("temporal-chart");
+  if (canvas) {
+    drawTemporalChart(canvas, metrics);
+  }
+}
+
+function drawTemporalChart(canvas, metrics) {
+  const ctx = canvas.getContext("2d");
+  const scores = metrics.scoreTrajectory.map((s) => parseFloat(s));
+  const width = canvas.width;
+  const height = canvas.height;
+  const padding = 90; // Increased padding for spacing
+  const graphWidth = width - padding * 2;
+  const graphHeight = height - padding * 2;
+
+  // ─── BACKGROUND ───
+  ctx.fillStyle = "rgba(12, 14, 35, 0.8)";
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.fillStyle = "rgba(20, 25, 50, 0.6)";
+  ctx.fillRect(padding, padding, graphWidth, graphHeight);
+
+  // ─── GRID LINES (BOLD) ───
+  ctx.strokeStyle = "rgba(100, 120, 200, 0.3)";
+  ctx.lineWidth = 2;
+  for (let i = 0; i <= 4; i++) {
+    const y = padding + (graphHeight / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(padding, y);
+    ctx.lineTo(width - padding, y);
+    ctx.stroke();
+  }
+
+  // ─── Y-AXIS LABELS (Score scale) ───
+  ctx.fillStyle = "rgba(200, 210, 255, 0.9)";
+  ctx.font = "bold 14px Inter";
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+  const maxScore = Math.max(...scores, 10);
+  for (let i = 0; i <= 4; i++) {
+    const y = padding + (graphHeight / 4) * (4 - i);
+    const scoreValue = (i / 4) * maxScore;
+    ctx.fillText(scoreValue.toFixed(1), padding - 20, y);
+  }
+
+  // ─── DATA LINE (BOLD AND VISIBLE) ───
+  ctx.strokeStyle = "#6366f1"; // Indigo for visibility
+  ctx.lineWidth = 5;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+
+  const minScore = 0;
+
+  scores.forEach((score, i) => {
+    const x = padding + (graphWidth / Math.max(1, scores.length - 1)) * i;
+    const normalizedScore = (score - minScore) / (maxScore - minScore);
+    const y = padding + graphHeight - normalizedScore * graphHeight;
+
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  });
+  ctx.stroke();
+
+  // ─── GLOW EFFECT FOR LINE ───
+  ctx.strokeStyle = "rgba(99, 102, 241, 0.3)";
+  ctx.lineWidth = 12;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+
+  scores.forEach((score, i) => {
+    const x = padding + (graphWidth / Math.max(1, scores.length - 1)) * i;
+    const normalizedScore = (score - minScore) / (maxScore - minScore);
+    const y = padding + graphHeight - normalizedScore * graphHeight;
+
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  });
+  ctx.stroke();
+
+  // ─── DATA POINTS (LARGE AND VISIBLE) ───
+  scores.forEach((score, i) => {
+    const x = padding + (graphWidth / Math.max(1, scores.length - 1)) * i;
+    const normalizedScore = (score - minScore) / (maxScore - minScore);
+    const y = padding + graphHeight - normalizedScore * graphHeight;
+
+    // Outer glow
+    ctx.fillStyle = "rgba(99, 102, 241, 0.2)";
+    ctx.beginPath();
+    ctx.arc(x, y, 12, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Main point
+    ctx.fillStyle = "#6366f1";
+    ctx.beginPath();
+    ctx.arc(x, y, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Highlight
+    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.beginPath();
+    ctx.arc(x - 2, y - 2, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Score label above point
+    ctx.fillStyle = "rgba(200, 210, 255, 0.95)";
+    ctx.font = "bold 12px Inter";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(score.toFixed(1), x, y - 20);
+  });
+
+  // ─── X-AXIS LABELS (Submission numbers) ───
+  ctx.fillStyle = "rgba(200, 210, 255, 0.9)";
+  ctx.font = "bold 13px Inter";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+
+  scores.forEach((_, i) => {
+    const x = padding + (graphWidth / Math.max(1, scores.length - 1)) * i;
+    ctx.fillText(`#${i + 1}`, x, height - padding + 25);
+  });
+
+  // ─── AXIS LABELS ───
+  ctx.fillStyle = "rgba(200, 210, 255, 0.8)";
+  ctx.font = "bold 15px Inter";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  ctx.fillText("Submission Progress →", width / 2, height - 35);
+
+  ctx.save();
+  ctx.translate(20, height / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = "center";
+  ctx.font = "bold 15px Inter";
+  ctx.fillText("← Score", 0, 0);
+  ctx.restore();
+
+  // ─── AXES (BOLD BORDERS) ───
+  ctx.strokeStyle = "rgba(150, 170, 255, 0.6)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(padding, padding);
+  ctx.lineTo(padding, height - padding);
+  ctx.lineTo(width - padding, height - padding);
+  ctx.stroke();
+}
+
 // ─────────────────────────────────────────
 // 3. User Interactions
 // ─────────────────────────────────────────
@@ -782,6 +1016,9 @@ if (demoForm) {
     try {
       const res = gradeAnswer(ref, stu, max);
 
+      // Track this submission for temporal analysis
+      TemporalDriftTracker.addSubmission(ref, stu, res.scoreObj, res.drift);
+
       // Show result panels
       document.getElementById("results-placeholder").classList.add("hidden");
       document.getElementById("results-content").classList.remove("hidden");
@@ -800,10 +1037,20 @@ if (demoForm) {
       renderSentenceHeatmap(res.sentences);
       renderConceptClusters(res.clusters);
 
-      const driftPct = deriveSemanticDriftPercent(res.scoreObj.final, max);
+      // Render temporal drift analysis if multiple submissions exist
+      const temporalMetrics = TemporalDriftTracker.computeTemporalMetrics();
+      if (temporalMetrics) {
+        renderTemporalDriftAnalysis(temporalMetrics);
+      }
+
+      // Use CORRECT semantic drift (concept-based), not score-derived proxy
+      const correctDriftPct = Math.round((res.drift?.drift_score ?? 0) * 100);
+      const temporalMsg = temporalMetrics
+        ? ` | Learning Trend: ${temporalMetrics.driftTrend}`
+        : "";
       showPopup(
         "Grading Complete",
-        `Score: ${res.scoreObj.final.toFixed(2)}/${max} | Semantic Drift: ${driftPct}%`,
+        `Score: ${res.scoreObj.final.toFixed(2)}/${max} | Semantic Drift: ${correctDriftPct}%${temporalMsg}`,
         "success",
       );
     } catch (err) {
@@ -1063,7 +1310,8 @@ function renderBatchResults(data, fileName = "results", options = {}) {
       const payload = options.liveReplay.studentAnswers?.[idx] || null;
       const hasRef = Boolean(options.liveReplay.referenceText);
       const hasSummary = Boolean(
-        payload && (typeof payload === "string"
+        payload &&
+        (typeof payload === "string"
           ? payload.trim()
           : (payload.text || "").trim()),
       );
@@ -1133,10 +1381,7 @@ function triggerLiveReplay(rowIndex, triggerBtn) {
 
   const ref = (liveReplayConfig.referenceText || "").trim();
   const payload = liveReplayConfig.studentAnswers[rowIndex];
-  const studentText =
-    typeof payload === "string"
-      ? payload
-      : payload?.text;
+  const studentText = typeof payload === "string" ? payload : payload?.text;
   const studentName =
     typeof payload === "string"
       ? `Student ${rowIndex + 1}`
@@ -1251,7 +1496,9 @@ function inferEvalColumns(rows) {
   const richestRow = rows.reduce((best, row) => {
     const current = row || {};
     if (!best) return current;
-    return Object.keys(current).length > Object.keys(best).length ? current : best;
+    return Object.keys(current).length > Object.keys(best).length
+      ? current
+      : best;
   }, rows[0] || {});
 
   const keys = Object.keys(richestRow || {});
@@ -1275,7 +1522,8 @@ function inferEvalColumns(rows) {
 
 function yieldToBrowser() {
   return new Promise((resolve) => {
-    const raf = typeof window !== "undefined" ? window.requestAnimationFrame : null;
+    const raf =
+      typeof window !== "undefined" ? window.requestAnimationFrame : null;
     if (typeof raf === "function") {
       raf(() => resolve());
     } else {
@@ -1425,6 +1673,110 @@ function checkEvalReady() {
   }
 }
 
+// ─────────────────────────────────────────
+// TEMPORAL SEMANTIC DRIFT ANALYSIS (Over Time)
+// ─────────────────────────────────────────
+
+/**
+ * Temporal Semantic Drift Analysis
+ * Tracks how semantic drift changes across multiple submissions over time.
+ * Implements research from:
+ * - Kulkarni et al. (2015): Linguistic change detection
+ * - Bamler & Mandt (2017): Dynamic word embeddings
+ */
+
+const TemporalDriftTracker = {
+  submissions: JSON.parse(sessionStorage.getItem("submission_history") || "[]"),
+
+  addSubmission(ref, studentAnswer, scoreObj, driftObj) {
+    const entry = {
+      timestamp: new Date().toISOString(),
+      studentAnswer: studentAnswer,
+      score: scoreObj.final,
+      driftScore: driftObj.drift_score || 0,
+      conceptCoverage: scoreObj.concept_coverage || 0,
+    };
+    this.submissions.push(entry);
+    sessionStorage.setItem(
+      "submission_history",
+      JSON.stringify(this.submissions),
+    );
+    return entry;
+  },
+
+  computeTemporalMetrics() {
+    if (this.submissions.length < 2) {
+      return null; // Need at least 2 submissions for temporal analysis
+    }
+
+    const scores = this.submissions.map((s) => s.score);
+    const drifts = this.submissions.map((s) => s.driftScore);
+    const coverages = this.submissions.map((s) => s.conceptCoverage);
+
+    // Improvement Score: raw difference between last and first submission
+    const firstScore = scores[0];
+    const lastScore = scores[scores.length - 1];
+    const rawImprovement = lastScore - firstScore;
+
+    // Normalize improvement to -1 to +1 scale (based on max possible difference)
+    const maxPossibleImprovement = 10 - 0; // Assuming 0-10 scale
+    const improvementScore = rawImprovement / maxPossibleImprovement;
+
+    // Consistency Score: 1 = stable, 0 = volatile
+    const scoreVariance = this.variance(scores);
+    const maxVariance = 25; // Max expected variance
+    const consistencyScore = Math.max(0, 1 - scoreVariance / maxVariance);
+
+    // Volatility: unpredictability measure
+    const volatility = Math.sqrt(scoreVariance);
+
+    // Determine Trend based on IMPROVEMENT SCORE (not drift)
+    let driftTrend = "stable";
+    if (rawImprovement > 0.5) {
+      driftTrend = "improving"; // Score improved significantly
+    } else if (rawImprovement < -0.5) {
+      driftTrend = "degrading"; // Score degraded significantly
+    }
+    // Otherwise remains "stable"
+
+    // Concept Coverage Evolution
+    const avgCoverage = coverages.reduce((a, b) => a + b, 0) / coverages.length;
+    const coverageTrend =
+      coverages[coverages.length - 1] > coverages[0]
+        ? "increasing"
+        : "decreasing";
+
+    return {
+      submissionCount: this.submissions.length,
+      improvementScore: rawImprovement.toFixed(3),
+      consistencyScore: consistencyScore.toFixed(3),
+      volatility: volatility.toFixed(3),
+      driftTrend: driftTrend,
+      scoreTrajectory: scores.map((s) => s.toFixed(2)),
+      driftTrajectory: drifts.map((d) => (d * 100).toFixed(1)),
+      coverageTrajectory: coverages.map((c) => (c * 100).toFixed(1)),
+      avgCoverage: (avgCoverage * 100).toFixed(1),
+      latestMetrics: {
+        score: scores[scores.length - 1].toFixed(2),
+        drift: (drifts[drifts.length - 1] * 100).toFixed(1),
+        coverage: (coverages[coverages.length - 1] * 100).toFixed(1),
+      },
+    };
+  },
+
+  variance(arr) {
+    if (arr.length < 2) return 0;
+    const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
+    const squaredDiffs = arr.map((x) => Math.pow(x - mean, 2));
+    return squaredDiffs.reduce((a, b) => a + b, 0) / arr.length;
+  },
+
+  clearSubmissions() {
+    this.submissions = [];
+    sessionStorage.removeItem("submission_history");
+  },
+};
+
 if (scriptBtn) {
   scriptBtn.addEventListener("click", async () => {
     if (!teacherTranscript || studentData.length === 0) {
@@ -1513,9 +1865,7 @@ if (scriptBtn) {
             Math.min(Math.max(coverageRaw, 0), 1) * 100,
           );
           const finalScore =
-            typeof res?.scoreObj?.final === "number"
-              ? res.scoreObj.final
-              : 0;
+            typeof res?.scoreObj?.final === "number" ? res.scoreObj.final : 0;
           const driftPct = Math.round(
             clamp01(res?.drift?.drift_score ?? 1) * 100,
           );
