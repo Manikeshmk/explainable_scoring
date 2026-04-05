@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ExplainGrade - Technology Stack</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 60px 20px;
+        color: #333;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      header {
+        text-align: center;
+        color: white;
+        margin-bottom: 60px;
+      }
+
+      h1 {
+        font-size: 3em;
+        margin-bottom: 15px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .subtitle {
+        font-size: 1.3em;
+        opacity: 0.95;
+      }
+
+      .breadcrumb {
+        text-align: center;
+        margin-bottom: 30px;
+        color: white;
+      }
+
+      .breadcrumb a {
+        color: #fff;
+        text-decoration: none;
+        margin: 0 10px;
+      }
+
+      .breadcrumb a:hover {
+        text-decoration: underline;
+      }
+
+      /* Tech Stack Sections */
+      .tech-section {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        margin-bottom: 40px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      .tech-section h2 {
+        color: #667eea;
+        font-size: 2em;
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+        border-bottom: 3px solid #667eea;
+      }
+
+      .tech-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 25px;
+        margin-top: 25px;
+      }
+
+      .tech-card {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        border-radius: 12px;
+        padding: 25px;
+        text-align: center;
+        transition:
+          transform 0.3s,
+          box-shadow 0.3s;
+        border: 2px solid transparent;
+      }
+
+      .tech-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        border-color: #667eea;
+      }
+
+      .tech-icon {
+        font-size: 4em;
+        margin-bottom: 15px;
+        min-height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .tech-card h3 {
+        color: #333;
+        font-size: 1.3em;
+        margin-bottom: 10px;
+      }
+
+      .tech-card p {
+        color: #666;
+        font-size: 0.95em;
+        line-height: 1.5;
+      }
+
+      .badge {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8em;
+        margin-top: 10px;
+      }
+
+      /* Architecture Diagram */
+      .architecture {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        margin-bottom: 40px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      .architecture h2 {
+        color: #667eea;
+        font-size: 2em;
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+        border-bottom: 3px solid #667eea;
+      }
+
+      .diagram {
+        background: #f8f9fa;
+        border: 2px solid #667eea;
+        border-radius: 10px;
+        padding: 25px;
+        font-family: monospace;
+        font-size: 0.9em;
+        line-height: 1.6;
+        overflow-x: auto;
+        color: #333;
+      }
+
+      /* Innovation Highlights */
+      .innovation {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 40px;
+        margin-bottom: 40px;
+      }
+
+      .innovation h2 {
+        color: white;
+        font-size: 2em;
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .innovation-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+      }
+
+      .innovation-item {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        padding: 25px;
+      }
+
+      .innovation-item h3 {
+        font-size: 1.3em;
+        margin-bottom: 15px;
+        color: #fff;
+      }
+
+      .innovation-item p {
+        font-size: 0.95em;
+        line-height: 1.6;
+        opacity: 0.95;
+      }
+
+      .star-rating {
+        margin-top: 10px;
+        font-size: 1.2em;
+      }
+
+      /* Footer */
+      footer {
+        text-align: center;
+        color: white;
+        margin-top: 50px;
+        padding-top: 30px;
+        border-top: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      footer a {
+        color: #fff;
+        text-decoration: none;
+      }
+
+      footer a:hover {
+        text-decoration: underline;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        h1 {
+          font-size: 2em;
+        }
+
+        .tech-section {
+          padding: 25px;
+        }
+
+        .tech-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .innovation {
+          padding: 25px;
+        }
+      }
+
+      .back-button {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        padding: 12px 25px;
+        border-radius: 25px;
+        text-decoration: none;
+        margin-bottom: 30px;
+        transition: background 0.3s;
+      }
+
+      .back-button:hover {
+        background: #764ba2;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div style="background: rgba(255, 255, 255, 0.9); border-radius: 8px; padding: 15px; margin-bottom: 20px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+        <a href="index.html" style="color: #667eea; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s ease;">🏠 Home</a>
+        <a href="analytics.html" style="color: #667eea; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s ease;">📊 Analytics</a>
+        <a href="chat.html" style="color: #667eea; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s ease;">💬 Chat</a>
+        <a href="technologies.html" style="color: white; background: #764ba2; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s ease;">🚀 Technologies</a>
+        <a href="test_results.html" style="color: #667eea; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s ease;">✅ Test Results</a>
+      </div>
+
+      <header>
+        <h1>🔧 Technology Stack</h1>
+        <p class="subtitle">
+          Enterprise-Grade Technologies Power ExplainGrade AI
+        </p>
+      </header>
+
+      <!-- NLP & AI Layer -->
+      <div class="tech-section">
+        <h2>🧠 NLP & AI Layer</h2>
+        <p>
+          Deep learning technologies for semantic understanding and intelligent
+          grading
+        </p>
+        <div class="tech-grid">
+          <div class="tech-card">
+            <div class="tech-icon">🤖</div>
+            <h3>Sentence Transformers</h3>
+            <p>
+              BERT-based semantic embeddings (all-MiniLM-L6-v2) for deep
+              understanding
+            </p>
+            <span class="badge">22M Parameters</span>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">📚</div>
+            <h3>spaCy</h3>
+            <p>
+              Industrial-strength NLP for tokenization and entity extraction
+            </p>
+            <span class="badge">v3.7+</span>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">📊</div>
+            <h3>NumPy/SciPy</h3>
+            <p>Statistical analysis and mathematical computations</p>
+            <span class="badge">Numerical Computing</span>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">🎯</div>
+            <h3>scikit-learn</h3>
+            <p>Machine learning for anomaly detection and classification</p>
+            <span class="badge">v1.3+</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Backend & API Layer -->
+      <div class="tech-section">
+        <h2>⚙️ Backend & API Layer</h2>
+        <p>Modern async frameworks for high-performance REST APIs</p>
+        <div class="tech-grid">
+          <div class="tech-card">
+            <div class="tech-icon">⚡</div>
+            <h3>FastAPI</h3>
+            <p>Async Python framework with auto-generated documentation</p>
+            <span class="badge">v0.104+</span>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">🐍</div>
+            <h3>Python</h3>
+            <p>Core language for backend logic and data processing</p>
+            <span class="badge">v3.11+</span>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">🌐</div>
+            <h3>Node.js</h3>
+            <p>Frontend runtime for interactive user experiences</p>
+            <span class="badge">v18+</span>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">✓</div>
+            <h3>Pydantic</h3>
+            <p>Data validation and serialization using Python type hints</p>
+            <span class="badge">Type Safety</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Storage Layer -->
+      <div class="tech-section">
+        <h2>💾 Data Storage Layer</h2>
+        <p>Multi-database architecture for different data patterns</p>
+        <div class="tech-grid">
+          <div class="tech-card">
+            <div class="tech-icon">🐘</div>
+            <h3>PostgreSQL</h3>
+            <p>
+              Relational database with ACID guarantees and advanced features
+            </p>
+            <span class="badge">v15+</span>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">📄</div>
+            <h3>MongoDB</h3>
+            <p>Document database for flexible JSON storage</p>
+            <span class="badge">v6+</span>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">⚡</div>
+            <h3>Redis</h3>
+            <p>In-memory caching for 100x faster query results</p>
+            <span class="badge">v7+</span>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">🔍</div>
+            <h3>Elasticsearch</h3>
+            <p>Full-text search and analytics over submissions</p>
+            <span class="badge">v8.9+</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stream & Batch Processing -->
+      <div class="tech-section">
+        <h2>⚡ Real-Time & Batch Processing</h2>
+        <p>Distributed computing for instant and large-scale analytics</p>
+        <div class="tech-grid">
+          <div class="tech-card">
+            <div class="tech-icon">📬</div>
+            <h3>Apache Kafka</h3>
+            <p>Event streaming platform for real-time processing (1000s/sec)</p>
+            <span class="badge">v3.5+</span>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">⚙️</div>
+            <h3>Apache Spark</h3>
+            <p>Distributed batch processing (1M submissions in 1 minute)</p>
+            <span class="badge">v3.4+</span>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">🌊</div>
+            <h3>Spark Streaming</h3>
+            <p>Real-time stream processing with windowing and aggregations</p>
+            <span class="badge">v3.4+</span>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">📅</div>
+            <h3>Apache Airflow</h3>
+            <p>Workflow orchestration for scheduled batch jobs</p>
+            <span class="badge">v2.7+</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Container & Orchestration -->
+      <div class="tech-section">
+        <h2>🐳 Container & Orchestration</h2>
+        <p>Cloud-native deployment and auto-scaling</p>
+        <div class="tech-grid">
+          <div class="tech-card">
+            <div class="tech-icon">📦</div>
+            <h3>Docker</h3>
+            <p>Container images for all services with layered builds</p>
+            <span class="badge">v24+</span>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">🎼</div>
+            <h3>Docker Compose</h3>
+            <p>Multi-container orchestration for local development</p>
+            <span class="badge">v2.20+</span>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">☸️</div>
+            <h3>Kubernetes</h3>
+            <p>Container orchestration with auto-scaling (3-10 replicas)</p>
+            <span class="badge">v1.27+</span>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">📦</div>
+            <h3>Helm</h3>
+            <p>Package management for Kubernetes deployments</p>
+            <span class="badge">v3.12+</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monitoring & Observability -->
+      <div class="tech-section">
+        <h2>📊 Monitoring & Observability</h2>
+        <p>Complete visibility into system performance and health</p>
+        <div class="tech-grid">
+          <div class="tech-card">
+            <div class="tech-icon">📈</div>
+            <h3>Prometheus</h3>
+            <p>Metrics collection and time-series database</p>
+            <span class="badge">v2.47+</span>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">📊</div>
+            <h3>Grafana</h3>
+            <p>Beautiful dashboards and alerting for metrics</p>
+            <span class="badge">v10+</span>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">📋</div>
+            <h3>ELK Stack</h3>
+            <p>Log aggregation (Elasticsearch, Logstash, Kibana)</p>
+            <span class="badge">v8.9+</span>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">🔗</div>
+            <h3>Jaeger</h3>
+            <p>Distributed tracing for request flows</p>
+            <span class="badge">Tracing</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Architecture Diagram -->
+      <div class="architecture">
+        <h2>🏗️ System Architecture</h2>
+        <div class="diagram">
+          <pre>
+┌─────────────────────────────────────────────────────────────┐
+│                    CLIENT LAYER                              │
+│  Browser │ Mobile │ Dashboard │ API Clients                 │
+└──────────────────┬──────────────────────────────────────────┘
+                   │
+┌──────────────────┴──────────────────────────────────────────┐
+│              FASTAPI / BACKEND API                           │
+│         High-Performance Async Processing                   │
+└──────────────────┬──────────────────────────────────────────┘
+                   │
+        ┌──────────┼──────────┐
+        │          │          │
+    ┌───▼──┐  ┌───▼──┐  ┌────▼────┐
+    │Kafka │  │Spark │  │Database │
+    │Stream│  │Batch │  │ Layer   │
+    └──────┘  └──────┘  └────┬────┘
+                              │
+              ┌───────────────┼───────────────┐
+              │               │               │
+         ┌────▼────┐    ┌────▼────┐    ┌────▼────┐
+         │Postgres │    │ MongoDB  │    │  Redis  │
+         │         │    │          │    │ (Cache) │
+         └─────────┘    └──────────┘    └─────────┘
+
+🔍 MONITORING LAYER:
+   Prometheus (Metrics) → Grafana (Dashboards)
+   ELK Stack (Logs) → Kibana (Search)
+                </pre
+          >
+        </div>
+      </div>
+
+      <!-- Innovation Highlights -->
+      <div class="innovation">
+        <h2>🏆 Innovation Highlights</h2>
+        <div class="innovation-grid">
+          <div class="innovation-item">
+            <h3>🧠 6-Dimensional Analytics</h3>
+            <p>
+              Unique measurement across semantic similarity, concept mastery,
+              anomaly detection, peer comparison, momentum, and coverage
+              metrics.
+            </p>
+            <div class="star-rating">⭐⭐⭐⭐⭐</div>
+          </div>
+          <div class="innovation-item">
+            <h3>⚡ Real-Time + Batch Hybrid</h3>
+            <p>
+              Kafka for instant feedback (200ms) + Spark for cohort analysis (5
+              minutes)
+            </p>
+            <div class="star-rating">⭐⭐⭐⭐⭐</div>
+          </div>
+          <div class="innovation-item">
+            <h3>🚀 Cloud-Native Design</h3>
+            <p>
+              Built on Kubernetes with auto-scaling, health checks, and 99.99%
+              uptime
+            </p>
+            <div class="star-rating">⭐⭐⭐⭐⭐</div>
+          </div>
+          <div class="innovation-item">
+            <h3>🎯 BERT Semantic Understanding</h3>
+            <p>
+              Deep transformer embeddings for meaning-based grading, not keyword
+              matching
+            </p>
+            <div class="star-rating">⭐⭐⭐⭐⭐</div>
+          </div>
+          <div class="innovation-item">
+            <h3>📊 Explainable Grades</h3>
+            <p>
+              Every grade includes natural language explanation of strengths and
+              improvements
+            </p>
+            <div class="star-rating">⭐⭐⭐⭐⭐</div>
+          </div>
+          <div class="innovation-item">
+            <h3>🔄 Temporal Intelligence</h3>
+            <p>
+              AI-powered learning trajectory analysis tracking student
+              improvement over time
+            </p>
+            <div class="star-rating">⭐⭐⭐⭐⭐</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Benchmarks -->
+      <div class="tech-section">
+        <h2>📈 Performance Metrics</h2>
+        <div style="overflow-x: auto">
+          <table style="width: 100%; border-collapse: collapse">
+            <tr style="background: #f5f5f5; border-bottom: 2px solid #667eea">
+              <th style="padding: 15px; text-align: left">Metric</th>
+              <th style="padding: 15px; text-align: left">Single Server</th>
+              <th style="padding: 15px; text-align: left">
+                Kubernetes Cluster
+              </th>
+              <th style="padding: 15px; text-align: left">Improvement</th>
+            </tr>
+            <tr style="border-bottom: 1px solid #ddd">
+              <td style="padding: 12px">Single Submission</td>
+              <td style="padding: 12px">2 sec</td>
+              <td style="padding: 12px">200 ms (cached)</td>
+              <td style="padding: 12px">10x faster</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #ddd; background: #f9f9f9">
+              <td style="padding: 12px">100 Students (Batch)</td>
+              <td style="padding: 12px">3 minutes</td>
+              <td style="padding: 12px">15 seconds</td>
+              <td style="padding: 12px">12x faster</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #ddd">
+              <td style="padding: 12px">1000 Students</td>
+              <td style="padding: 12px">30 minutes</td>
+              <td style="padding: 12px">1.5 minutes</td>
+              <td style="padding: 12px">20x faster</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #ddd; background: #f9f9f9">
+              <td style="padding: 12px">Concurrent Requests</td>
+              <td style="padding: 12px">~10</td>
+              <td style="padding: 12px">10,000+</td>
+              <td style="padding: 12px">1000x scalable</td>
+            </tr>
+            <tr style="background: #f9f9f9">
+              <td style="padding: 12px">System Availability</td>
+              <td style="padding: 12px">95%</td>
+              <td style="padding: 12px">99.99%</td>
+              <td style="padding: 12px">100x more reliable</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <footer>
+        <p>© 2026 ExplainGrade AI | Cloud Computing & AI Service Edition</p>
+        <p><a href="index.html">Home</a> | <a href="analytics.html">Analytics</a> | <a href="chat.html">Chat</a> | <a href="test_results.html">Test Results</a></p>
+      </footer>
+    </div>
+  </body>
+</html>

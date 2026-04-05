@@ -1,0 +1,196 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: explaingrade-postgres
+    environment:
+      POSTGRES_USER: explaingrade
+      POSTGRES_PASSWORD: securepassword123
+      POSTGRES_DB: explaingrade_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U explaingrade"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - explaingrade-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: explaingrade-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - explaingrade-network
+
+  # Apache Kafka & Zookeeper
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: explaingrade-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - explaingrade-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: explaingrade-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: kafka-broker-api-versions --bootstrap-server=localhost:9092
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - explaingrade-network
+
+  # MongoDB
+  mongo:
+    image: mongo:6
+    container_name: explaingrade-mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: explaingrade
+      MONGO_INITDB_ROOT_PASSWORD: securepassword123
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - explaingrade-network
+
+  # Elasticsearch (for search)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
+    container_name: explaingrade-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: curl -s http://localhost:9200 >/dev/null || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - explaingrade-network
+
+  # Apache Spark Master (for batch processing)
+  spark-master:
+    image: bitnami/spark:3.4.0
+    container_name: explaingrade-spark-master
+    environment:
+      SPARK_MODE: master
+      SPARK_RPC_AUTHENTICATION_ENABLED: "no"
+      SPARK_RPC_ENCRYPTION_ENABLED: "no"
+      SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED: "no"
+      SPARK_SSL_ENABLED: "no"
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+      - "4040:4040"
+    networks:
+      - explaingrade-network
+
+  # Apache Spark Worker
+  spark-worker:
+    image: bitnami/spark:3.4.0
+    container_name: explaingrade-spark-worker
+    depends_on:
+      - spark-master
+    environment:
+      SPARK_MODE: worker
+      SPARK_MASTER_URL: spark://spark-master:7077
+      SPARK_WORKER_MEMORY: 2G
+      SPARK_WORKER_CORES: 2
+      SPARK_RPC_AUTHENTICATION_ENABLED: "no"
+      SPARK_RPC_ENCRYPTION_ENABLED: "no"
+    ports:
+      - "8081:8081"
+    networks:
+      - explaingrade-network
+
+  # FastAPI Backend
+  fastapi:
+    build: .
+    container_name: explaingrade-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://explaingrade:securepassword123@postgres:5432/explaingrade_db
+      REDIS_URL: redis://redis:6379/0
+      KAFKA_BROKER: kafka:29092
+      PYTHONUNBUFFERED: 1
+    volumes:
+      - .:/app
+    networks:
+      - explaingrade-network
+    command: python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Node.js Frontend
+  frontend:
+    image: node:18-alpine
+    container_name: explaingrade-frontend
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+    environment:
+      NODE_ENV: development
+    networks:
+      - explaingrade-network
+    command: npm run dev
+
+volumes:
+  postgres_data:
+  redis_data:
+  mongo_data:
+  elasticsearch_data:
+
+networks:
+  explaingrade-network:
+    driver: bridge

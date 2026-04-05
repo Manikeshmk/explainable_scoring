@@ -561,18 +561,16 @@ class ChatUI {
    */
   addMessage(role, text, isHTML = false) {
     const messageEl = document.createElement("div");
-    messageEl.className = `chat-message chat-message--${role}`;
-
-    const contentEl = document.createElement("div");
-    contentEl.className = "chat-message__content";
+    // Map assistant/user roles to CSS classes
+    const cssClass = role === "assistant" ? "message-ai" : "message-user";
+    messageEl.className = `message ${cssClass}`;
 
     if (isHTML) {
-      contentEl.innerHTML = text;
+      messageEl.innerHTML = text;
     } else {
-      contentEl.textContent = text;
+      messageEl.textContent = text;
     }
 
-    messageEl.appendChild(contentEl);
     this.messagesContainer.appendChild(messageEl);
 
     // Auto-scroll to bottom

@@ -34,6 +34,13 @@
           <li><a href="research.html" class="nav-link">Research</a></li>
           <li><a href="usage.html" class="nav-link">How to Use</a></li>
           <li><a href="chat.html" class="nav-link">Assistant 💬</a></li>
+          <li><a href="analytics.html" class="nav-link">Analytics 📊</a></li>
+          <li>
+            <a href="technologies.html" class="nav-link">Technologies 🔧</a>
+          </li>
+          <li>
+            <a href="test_results.html" class="nav-link">Test Results ✅</a>
+          </li>
         </ul>
         <div class="nav-actions">
           <button class="btn btn-secondary" id="theme-toggle">☀️</button>
@@ -529,6 +536,21 @@
         ></div>
         <div id="batch-results" class="hidden" style="margin-top: 3rem">
           <div id="batch-table-wrap" class="glass-card batch-table-card"></div>
+
+          <!-- ANALYTICS VISUALIZATION SECTION -->
+          <div
+            id="batch-analytics-container"
+            class="hidden"
+            style="margin-top: 3rem"
+          >
+            <h2 style="margin-bottom: 2rem">📊 Batch Analytics Summary</h2>
+
+            <div id="batch-anomalies" class="analytics-grid"></div>
+            <div id="batch-peer-comparison" class="analytics-grid"></div>
+            <div id="batch-learning-curves" class="analytics-grid"></div>
+            <div id="batch-momentum" class="analytics-grid"></div>
+            <div id="batch-coverage" class="analytics-grid"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -570,6 +592,8 @@
     <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="scorer.js"></script>
+    <script src="batch_analytics_visualizer.js"></script>
+    <script src="analytics-handler.js"></script>
     <script src="chat.js"></script>
     <script src="app.js"></script>
   </body>

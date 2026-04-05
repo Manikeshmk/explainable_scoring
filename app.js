@@ -1106,6 +1106,66 @@ if (uploadZone && batchInput) {
 }
 
 /**
+ * Display batch analytics visualizations
+ */
+function displayBatchAnalytics(analyticsData) {
+  const container = document.getElementById("batch-analytics-container");
+  if (!container) return;
+
+  container.classList.remove("hidden");
+
+  // Display anomalies
+  if (analyticsData.anomalies) {
+    const anomaliesSection = document.getElementById("batch-anomalies");
+    if (anomaliesSection && AnalyticsHandler) {
+      anomaliesSection.innerHTML =
+        "<h3 style='grid-column: 1/-1; margin-bottom: 1.5rem;'>⚠️ Anomaly Detection</h3>";
+      AnalyticsHandler.renderAnomalies(analyticsData.anomalies);
+    }
+  }
+
+  // Display peer comparison
+  if (analyticsData.peer_comparison) {
+    const peerSection = document.getElementById("batch-peer-comparison");
+    if (peerSection && AnalyticsHandler) {
+      peerSection.innerHTML =
+        "<h3 style='grid-column: 1/-1; margin-bottom: 1.5rem;'>📊 Peer Comparison</h3>";
+      AnalyticsHandler.renderPeerComparison(analyticsData.peer_comparison);
+    }
+  }
+
+  // Display learning curves
+  if (analyticsData.learning_curves) {
+    const curvesSection = document.getElementById("batch-learning-curves");
+    if (curvesSection && AnalyticsHandler) {
+      curvesSection.innerHTML =
+        "<h3 style='grid-column: 1/-1; margin-bottom: 1.5rem;'>📈 Learning Curves</h3>";
+      AnalyticsHandler.renderLearningCurves(analyticsData.learning_curves);
+    }
+  }
+
+  // Display momentum
+  if (analyticsData.momentum) {
+    const momentumSection = document.getElementById("batch-momentum");
+    if (momentumSection && AnalyticsHandler) {
+      momentumSection.innerHTML =
+        "<h3 style='grid-column: 1/-1; margin-bottom: 1.5rem;'>⚡ Momentum & Prediction</h3>";
+      AnalyticsHandler.renderMomentum(analyticsData.momentum);
+    }
+  }
+
+  // Display coverage
+  if (analyticsData.semantic_coverage) {
+    const coverageSection = document.getElementById("batch-coverage");
+    if (coverageSection && AnalyticsHandler) {
+      coverageSection.innerHTML =
+        "<h3 style='grid-column: 1/-1; margin-bottom: 1.5rem;'>📏 Semantic Coverage</h3>";
+      AnalyticsHandler.renderCoverage(analyticsData.semantic_coverage);
+    }
+  }
+}
+
+/**
  * Detect column name by matching variations
  * Handles: email, Email, email_address, Email Address, emailAddress, etc.
  */
@@ -1329,6 +1389,11 @@ function renderBatchResults(data, fileName = "results", options = {}) {
 
   wrap.innerHTML = html;
   showToast(`✅ Results loaded: ${data.length} records from ${fileName}`);
+
+  // Check if analytics data is available in options
+  if (options.analyticsData) {
+    displayBatchAnalytics(options.analyticsData);
+  }
 
   if (enableReplay) {
     liveReplayConfig = {
