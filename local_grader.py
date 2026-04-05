@@ -587,7 +587,7 @@ def grade_answer(model, ref_embedding, ref: str, stu: str, max_score: float):
     stage2 = F * max_score
     
     # ── Final score (drift is used for visualization only, not scoring) ──
-    raw_final = (stage1 + stage2)*10
+    raw_final = (stage1 + stage2)
     final = min(max_score, raw_final)
 
     return {

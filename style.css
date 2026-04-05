@@ -98,6 +98,7 @@
 html {
   scroll-behavior: smooth;
   font-size: 16px;
+  scroll-padding-top: 100px;
 }
 
 body {
@@ -1071,6 +1072,18 @@ textarea.form-control {
   padding: 3rem;
 }
 
+#results-content {
+  scroll-margin-top: 120px;
+}
+
+#xai-content {
+  scroll-margin-top: 120px;
+}
+
+#batch-results {
+  scroll-margin-top: 120px;
+}
+
 .score-circle {
   width: 180px;
   height: 180px;
@@ -1549,6 +1562,7 @@ textarea.form-control {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 2rem;
+  scroll-margin-top: 120px;
 }
 
 .results-placeholder {

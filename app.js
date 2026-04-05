@@ -1058,6 +1058,12 @@ if (demoForm) {
       document.getElementById("results-content").classList.remove("hidden");
       document.getElementById("xai-content").classList.remove("hidden");
 
+      // Auto-scroll to results
+      const resultsContent = document.getElementById("results-content");
+      if (resultsContent) {
+        setTimeout(() => resultsContent.scrollIntoView({ behavior: "smooth", block: "nearest" }), 100);
+      }
+
       // Render stats
       renderScore(res.scoreObj, max);
       renderExplanation(res.explanation);
@@ -1423,6 +1429,12 @@ function renderBatchResults(data, fileName = "results", options = {}) {
 
   wrap.innerHTML = html;
   showToast(`✅ Results loaded: ${data.length} records from ${fileName}`);
+
+  // Auto-scroll to batch results
+  const resultsSec = document.getElementById("batch-results");
+  if (resultsSec) {
+    setTimeout(() => resultsSec.scrollIntoView({ behavior: "smooth", block: "start" }), 200);
+  }
 
   // Check if analytics data is available in options
   if (options.analyticsData) {
