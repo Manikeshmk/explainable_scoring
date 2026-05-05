@@ -554,5 +554,3 @@ Course: Cloud Computing & AI Service
 ---
 
 **Built with 🧠 for learners and educators**
-
-🚀 Start with the Quick Start above, then explore `START_HERE.md` for more detailed guidance.
