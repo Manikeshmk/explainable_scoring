@@ -1,6 +1,6 @@
 # 🎓 ExplainGrade AI
 
-> **Intelligent Automated Short Answer Grading System**
+> **Intelligent Automated Summary Grading System**
 >
 > Transform student assessment with semantic intelligence, explainable AI, and cloud-scale processing.
 
