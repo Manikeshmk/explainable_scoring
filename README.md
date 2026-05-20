@@ -1,3 +1,7 @@
+![Repo visits](https://hits.sh/github.com/Manikeshmk/explainable_scoring.svg?label=repo%20visits)
+![GitHub stars](https://img.shields.io/github/stars/Manikeshmk/explainable_scoring?style=logo&logo=github&label=⭐%20Stars) 
+![GitHub forks](https://img.shields.io/github/forks/Manikeshmk/explainable_scoring?style=social)
+
 # 🎓 ExplainGrade AI
 
 > **Intelligent Automated Summary Grading System**
