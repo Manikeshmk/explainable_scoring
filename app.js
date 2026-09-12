@@ -1352,7 +1352,7 @@ let liveReplayConfig = null;
 function renderBatchResults(data, fileName = "results", options = {}) {
   const wrap = document.getElementById("batch-table-wrap");
   const resultsSec = document.getElementById("batch-results");
-  if (!wrap) return;
+  if (!wrap || !resultsSec) return;
 
   resultsSec.classList.remove("hidden");
 
@@ -1409,10 +1409,7 @@ function renderBatchResults(data, fileName = "results", options = {}) {
   showToast(`✅ Results loaded: ${data.length} records from ${fileName}`);
 
   // Auto-scroll to batch results
-  const resultsSec = document.getElementById("batch-results");
-  if (resultsSec) {
-    setTimeout(() => resultsSec.scrollIntoView({ behavior: "smooth", block: "start" }), 200);
-  }
+  setTimeout(() => resultsSec.scrollIntoView({ behavior: "smooth", block: "start" }), 200);
 
   // Check if analytics data is available in options
   if (options.analyticsData) {
