@@ -40,7 +40,11 @@
           </li>
         </ul>
         <div class="nav-actions">
-          <button class="btn btn-secondary" id="theme-toggle">☀️</button>
+          <button
+            class="btn btn-secondary"
+            id="theme-toggle"
+            type="button"
+          ></button>
           <a
             href="https://github.com/manikeshmk/Explainable_Summary_Score"
             target="_blank"
@@ -182,27 +186,6 @@
 
     <script src="batch_analytics_visualizer.js"></script>
     <script src="analytics-handler.js"></script>
-    <script>
-      // Theme toggle
-      const themeToggle = document.getElementById("theme-toggle");
-      if (themeToggle) {
-        themeToggle.addEventListener("click", () => {
-          const current = document.documentElement.getAttribute("data-theme");
-          const next = current === "dark" ? "light" : "dark";
-          document.documentElement.setAttribute("data-theme", next);
-          themeToggle.textContent = next === "dark" ? "☀️" : "🌙";
-        });
-      }
-
-      // Navbar scroll effect
-      const navbar = document.getElementById("navbar");
-      window.addEventListener(
-        "scroll",
-        () => {
-          if (navbar) navbar.classList.toggle("scrolled", window.scrollY > 50);
-        },
-        { passive: true },
-      );
-    </script>
+    <script src="ui.js"></script>
   </body>
 </html>

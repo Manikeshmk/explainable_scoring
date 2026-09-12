@@ -39,28 +39,6 @@ function reRenderCanvasCharts() {
   }
 }
 
-// Theme Toggle
-const themeToggle = document.getElementById("theme-toggle");
-if (themeToggle) {
-  themeToggle.addEventListener("click", () => {
-    const current = document.documentElement.getAttribute("data-theme");
-    const next = current === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", next);
-    themeToggle.textContent = next === "dark" ? "☀️" : "🌙";
-    if (typeof reRenderCanvasCharts === "function") reRenderCanvasCharts();
-  });
-}
-
-// Navbar Scroll Effect
-const navbar = document.getElementById("navbar");
-window.addEventListener(
-  "scroll",
-  () => {
-    if (navbar) navbar.classList.toggle("scrolled", window.scrollY > 50);
-  },
-  { passive: true },
-);
-
 // ─────────────────────────────────────────
 // ENHANCED MODAL POPUP SYSTEM
 // ─────────────────────────────────────────

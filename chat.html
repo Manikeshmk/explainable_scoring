@@ -113,6 +113,13 @@
             <a href="test_results.html" class="nav-link">Test Results ✅</a>
           </li>
         </ul>
+        <div class="nav-actions">
+          <button
+            id="theme-toggle"
+            class="btn btn-secondary btn-sm"
+            type="button"
+          ></button>
+        </div>
       </div>
     </nav>
 
@@ -179,12 +186,16 @@
     </footer>
 
     <script src="chat.js"></script>
+    <script src="ui.js"></script>
     <script>
       // Smooth UI wiring for chat suggestions in chat.html specifically
       document.querySelectorAll(".suggestion-item").forEach((item) => {
         item.addEventListener("click", () => {
-          document.getElementById("chat-input").value = item.textContent;
-          document.getElementById("chat-send").click();
+          const chatInput = document.getElementById("chat-input");
+          const chatSend = document.getElementById("chat-send");
+          if (!chatInput || !chatSend) return;
+          chatInput.value = item.textContent;
+          chatSend.click();
         });
       });
     </script>

@@ -266,6 +266,12 @@ h6,
   align-items: center;
 }
 
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .nav-link {
   text-decoration: none;
   color: var(--text-dim);

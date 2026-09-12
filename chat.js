@@ -518,7 +518,6 @@ class ChatUI {
     this.sendButton = document.getElementById("chat-send");
 
     if (!this.messagesContainer || !this.inputField || !this.sendButton) {
-      console.error("Chat elements not found in DOM");
       return;
     }
 
@@ -578,11 +577,21 @@ class ChatUI {
   }
 }
 
+function hasChatElements() {
+  return Boolean(
+    document.getElementById("chat-messages") &&
+      document.getElementById("chat-input") &&
+      document.getElementById("chat-send"),
+  );
+}
+
 // Initialize chat when DOM is ready
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
-    window.chatUI = new ChatUI();
+    if (hasChatElements()) {
+      window.chatUI = new ChatUI();
+    }
   });
-} else {
+} else if (hasChatElements()) {
   window.chatUI = new ChatUI();
 }
